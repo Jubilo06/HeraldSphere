@@ -12,22 +12,50 @@ const generateToken = (id,username, role) => {
 
 // --- REGISTER USER ---
 export const register = async (req, res) => {
+  
   try {
-    const { username, password, role } = req.body;
-
+    const {
+      username,
+      email,
+      firstName,
+      lastName,
+      password,
+      role = "writer",
+    } = req.body;
+    console.log("Multer req.file object in authController:", req.file);
+    const profilePicPath = req.file
+    ? `/uploads/profile_pics/${req.file.filename}`
+    : "";
+    console.log("--- Register User Debug ---");
+    console.log("req.body.role:", req.body.role);
+    console.log("Type of req.body.role:", typeof req.body.role);
+    console.log("Is req.body.role an Array:", Array.isArray(req.body.role));
+    console.log("Value being used for user.role:", role || "writer");
+    console.log("--- End Debug ---");
     // Basic validation
     if (!username || !password) {
       return res.status(400).json({ message: "Username and password are required." });
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
     if (existingUser) {
       return res.status(409).json({ message: "Username already exists." }); // 409 Conflict for duplicates
     }
 
     // Create new user (password hashing happens in pre-save hook)
-    const newUser = new User({ username, password, role: role || 'user' });
+    const newUser = new User({
+      username,
+      email,
+      firstName,
+      lastName,
+      password,
+      profilePic: profilePicPath,
+      role: role ,
+    });
+    console.log(newUser.profilePic);
+     console.log("Calculated profilePicPath:", profilePicPath);
+     console.log("newUser.profilePic AFTER save:", newUser.profilePic);
     await newUser.save();
 
     // Optionally log in the user immediately after registration
@@ -38,6 +66,10 @@ export const register = async (req, res) => {
       user: {
         _id: newUser._id,
         username: newUser.username,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        profilePic: newUser.profilePic,
         role: newUser.role,
       },
       token: token, // Send token back for immediate login
@@ -76,11 +108,17 @@ export const login = (req, res, next) => {
     const token = generateToken(user._id, user.username, user.role);
 
     return res.json({
-      _id: user._id,
-      username: user.username,
-      role: user.role,
-      token: token,
-      message: "Logged in successfully!",
+        _id: user._id,
+        username: user.username,
+        email: user.email, // <--- MUST BE INCLUDED
+        firstName: user.firstName, // <--- MUST BE INCLUDED
+        lastName: user.lastName, // <--- MUST BE INCLUDED
+        profilePic: user.profilePic, // <--- MUST BE INCLUDED
+        role: user.role,
+        token: token,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt, 
+        message: "Logged in successfully!",
     });
   })(req, res, next); // Ensure req, res, next are passed to the middleware
 };

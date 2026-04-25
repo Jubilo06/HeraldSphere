@@ -1,12 +1,13 @@
 // src/components/PostForm.jsx
 import React, { useState, useEffect, useContext, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import ReactDOM from 'react-dom';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { AuthContext } from './AuthContext';
 import axios from 'axios'; // Ensure axios is imported for direct calls like image upload
 import api from './Api'; // Use your configured axios instance for post CRUD
+import '../App.css'
 
 function WriterPostForm() {
   const { id } = useParams(); // Get ID from URL for editing
@@ -115,7 +116,9 @@ const [mainImageFile, setMainImageFile] = useState(null); // For the actual file
               try {
                 // Use axios directly for image upload, as it's a specific endpoint
                 const response = await api.post('http://localhost:5014/api/upload-image', formData, {
-                  headers: { 'Content-Type': 'multipart/form-data', 'Authorization': `Bearer ${token}` },
+                  headers: { 'Content-Type': 'multipart/form-data', 
+                    'Authorization': `Bearer ${token}`
+                     },
                   withCredentials: true, // If your image upload endpoint requires credentials
                 });
 
@@ -209,7 +212,7 @@ const [mainImageFile, setMainImageFile] = useState(null); // For the actual file
 
   // --- Render Logic ---
   if (isLoading) return <div>Loading user authentication...</div>; // Show loading for AuthContext
-  if (!isAuthenticated) return <navigate to="/login" replace />; // Should be handled by ProtectedRoute
+  if (!isAuthenticated) return <Navigate to="/login" replace />; // Should be handled by ProtectedRoute
   if (loading && isEditMode) return <div>Loading post for editing...</div>; // For initial data fetch for edit
   // If not editing, and is just loading submission
   if (loading && !isEditMode) return <div>Submitting post...</div>;
@@ -220,36 +223,37 @@ const [mainImageFile, setMainImageFile] = useState(null); // For the actual file
 
   return (
     <div>
-      <h2>{formTitle}</h2>
+      <h2 className='text-4xl text-red-700 font-extrabold mb-10'>{formTitle}</h2>
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
+        <div className="form-group flex flex-2 gap-4 mb-4">
           <label htmlFor="title">Title:</label>
           <input
             type="text"
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="form-input"
+            className="form-input border round p-1 border-black"
             required
           />
         </div>
-        <div className="form-group">
+        <div className="form-group mb-4 h-auto">
           <label htmlFor="category">Category:</label>
           <select
             id="category"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="form-select"
+            className="form-select h-auto"
             required
           >
             <option value="">Select a Category</option>
             {categories.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
+              <option className='h-auto relative' key={cat} value={cat}>{cat}</option>
             ))}
           </select>
         </div>
 
-        <div className="form-group quill-editor-group">
+        <div className="form-group quill-editor-group min-h-100 flex flex-col 
+          rounded-lg mb-10 ">
           <label htmlFor="content">Content:</label>
           <ReactQuill
             value={content}
@@ -257,11 +261,80 @@ const [mainImageFile, setMainImageFile] = useState(null); // For the actual file
             modules={modules}
             theme="snow"
             placeholder="Write your post content here..."
-            className="quill-editor"
+            className="quill-editor  border border-black bg-white"
           />
         </div>
-        <div className="form-group">
-          <label htmlFor="mainImage">Featured Image:</label>
+        <div className="form-group mb-10 p-6 bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl transition-all hover:border-indigo-400">
+  <label 
+    htmlFor="mainImage" 
+    className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-3"
+  >
+    Featured Image
+  </label>
+
+  <div className="flex flex-col items-center justify-center space-y-4">
+    {/* CUSTOM FILE INPUT */}
+    <label className="flex flex-col items-center justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dotted rounded-md appearance-none cursor-pointer hover:border-indigo-400 focus:outline-none">
+      <span className="flex items-center space-x-2">
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        </svg>
+        <span className="font-medium text-gray-600">
+          {mainImageFile ? mainImageFile.name : "Click to upload or drag and drop"}
+        </span>
+      </span>
+      <input
+        type="file"
+        id="mainImage"
+        accept="image/*"
+        onChange={(e) => {
+          setMainImageFile(e.target.files[0]);
+          setMainImageUrl('');
+        }}
+        className="hidden"
+      />
+    </label>
+
+    {/* PREVIEW AREA */}
+    {(mainImageUrl || mainImageFile) && (
+      <div className="relative group mt-4">
+        <div className="overflow-hidden rounded-lg shadow-lg border-4 border-white">
+          <img 
+            src={mainImageUrl || URL.createObjectURL(mainImageFile)} 
+            alt="Preview" 
+            className="h-48 w-80 object-cover transform transition group-hover:scale-105" 
+          />
+        </div>
+        
+        {/* Floating Remove Button */}
+        <button
+          type="button"
+          onClick={() => {
+            setMainImageUrl(null);
+            setMainImageFile(null);
+          }}
+          className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full p-1.5 shadow-xl hover:bg-red-600 transition-colors focus:ring-2 focus:ring-red-300"
+          title="Remove Image"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* Badge Indicator */}
+        <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded">
+          {mainImageUrl ? "Current Image" : "New Selection"}
+        </div>
+      </div>
+    )}
+  </div>
+  
+  <p className="mt-2 text-xs text-gray-500 text-center">
+    PNG, JPG or WEBP (Max 10MB)
+  </p>
+</div>
+        {/* <div className="form-group mb-10 "> */}
+          {/* <label htmlFor="mainImage">Featured Image:</label>
           <input
             type="file"
             id="mainImage"
@@ -271,8 +344,8 @@ const [mainImageFile, setMainImageFile] = useState(null); // For the actual file
                 setMainImageUrl(''); // Clear previous URL if new file is selected
             }}
             className="form-input"
-          />
-          {mainImageUrl && ( // Display existing or newly uploaded main image
+          /> */}
+          {/* {mainImageUrl && ( // Display existing or newly uploaded main image
             <div style={{ marginTop: '10px' }}>
               <img src={mainImageUrl} alt="Featured Post" style={{ maxWidth: '200px', display: 'block' }} />
               <button
@@ -286,9 +359,9 @@ const [mainImageFile, setMainImageFile] = useState(null); // For the actual file
                 Remove Image
               </button>
             </div>
-          )}
+          )} */}
           {/* If you want to show a preview of a newly selected file before upload */}
-          {mainImageFile && !mainImageUrl && (
+          {/* {mainImageFile && !mainImageUrl && (
               <div style={{ marginTop: '10px' }}>
                   <img src={URL.createObjectURL(mainImageFile)} alt="New Featured" style={{ maxWidth: '200px', display: 'block' }} />
                   <button
@@ -299,18 +372,19 @@ const [mainImageFile, setMainImageFile] = useState(null); // For the actual file
                     Clear Selected File
                   </button>
               </div>
-          )}
-        </div>
+          )} */}
+        {/* </div> */}
         {/* Author field removed for direct user input, as backend sets it securely */}
         {/* {error && <p style={{ color: 'red' }}>Error: {error}</p>} */}
         {error && <p style={{ color: 'red', margin: '10px 0' }}>Error: {error}</p>}
-        <button type="submit" disabled={loading}>
+        <button className='border border-black text-white bg-gray-950 rounded p-1' type="submit" disabled={loading}>
           {loading ? 'Saving...' : (isEditMode ? 'Update Post' : 'Create Post')}
         </button>
         <button
           type="button"
           onClick={() => navigate(user?.role === 'admin' ? '/admin/posts' : '/my-posts')}
           disabled={loading}
+          className='border border-black text-white bg-gray-950 rounded p-1'
           style={{ marginLeft: '10px' }}
         >
           Cancel

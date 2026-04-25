@@ -17,11 +17,7 @@ function PostList() {
     fetchPosts();
   }, []);
 
-  // useEffect(() => {
-  //   const pageFromUrl = parseInt(searchParams.get('page')) || 1;
-  //   setCurrentPage(pageFromUrl);
-  //   fetchPosts(pageFromUrl);
-  // }, [searchParams]); // Re-fetch when URL search params change
+
   useEffect(() => {
     const pageFromUrl = parseInt(searchParams.get('page')) || 1;
     setCurrentPage(pageFromUrl);
@@ -41,59 +37,12 @@ function PostList() {
     }
   }, [postsPerPage]); // Depend on postsPerPage if it's dynamic
 
-  // const fetchPosts = async (page) => {
-  //   setLoading(true);
-  //   try {
-  //     // Adjust URL to include pagination parameters
-  //     const response = await fetch(`http://localhost:5000/api/posts?page=${page}&limit=${postsPerPage}`);
-  //     if (!response.ok) {
-  //       throw new Error(`HTTP error! status: ${response.status}`);
-  //     }
-  //     const data = await response.json();
-  //     setPosts(data.posts);
-  //     setTotalPages(data.totalPages);
-  //   } catch (err) {
-  //     setError(err.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const handlePageChange = (newPage) => {
     setSearchParams({ page: newPage }); // Update URL, which triggers useEffect
   };
 
-  // const fetchPosts = async () => {
-  //   try {
-  //     const response = await fetch('http://localhost:5000/api/posts'); // Your backend URL
-  //     if (!response.ok) {
-  //       throw new Error(`HTTP error! status: ${response.status}`);
-  //     }
-  //     const data = await response.json();
-  //     setPosts(data);
-  //   } catch (err) {
-  //     setError(err.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
-  // const handleDelete = async (id) => {
-  //   if (window.confirm('Are you sure you want to delete this post?')) {
-  //     try {
-  //       const response = await fetch(`http://localhost:5000/api/posts/${id}`, {
-  //         method: 'DELETE',
-  //       });
-  //       if (!response.ok) {
-  //         throw new Error(`HTTP error! status: ${response.status}`);
-  //       }
-  //       setPosts(posts.filter(post => post._id !== id)); // Remove from UI
-  //     } catch (err) {
-  //       console.error('Failed to delete post:', err);
-  //       setError('Failed to delete post.');
-  //     }
-  //   }
-  // };
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this post?')) {
       try {

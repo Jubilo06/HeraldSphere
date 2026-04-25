@@ -5,8 +5,12 @@ const userSchema = new mongoose.Schema(
   {
     // You mentioned username, so we'll add it. Email is still best for uniqueness.
     username: { type: String, required: true, unique: true }, // For login
+    email: { type: String, required: true, unique: true }, // Added email
+    firstName: { type: String, required: true }, // New
+    lastName: { type: String, required: true }, // New
     password: { type: String, required: true },
-    role: { type: String, enum: ["user", "admin"], default: "user" },
+    profilePic: { type: String, default: "" }, // New: Store URL or path to the image
+    role: { type: String, enum: ["writer", "admin"], default: "writer" },
   },
   { timestamps: true },
 );

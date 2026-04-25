@@ -34,7 +34,7 @@ function MyPost() {
       try {
         await api.delete(`/api/posts/${postId}`);
         // Remove the deleted post from the state
-        setMyPosts(myPosts.filter(post => post._id !== postId));
+        setPosts(posts.filter(post => post._id !== postId));
         console.log(`Post ${postId} deleted successfully.`);
       } catch (err) {
         console.error('Error deleting post:', err);
@@ -47,27 +47,42 @@ function MyPost() {
     if (error) return <div style={{ color: 'red' }}>Error: {error}</div>;
     if (posts.length === 0) return <div>You haven't created any posts yet. <Link to="/submit-post">Start writing!</Link></div>;
   return (
-    <div>
-        <h3>My Contributions ({user?.username})</h3>
-      <p>List of posts written by the current user will go here.</p>
+    <div className='bg-[url("/myPost.webp")] bg-center bg-cover h-screen '>
+        <h3 className='text-2xl font-extrabold pt-10 ml-10'>Your Contributions ({user?.username})</h3>
+      <p className='text-gray-500 pt-10 ml-16 mb-10'>List of posts written by you.</p>
       {/* Fetch and display posts where author matches current user's ID */}
-      <div>
+      <div className=' w-[90%] justify-self-center p-4   border rounded mb-6 h-auto'>
           {posts.map(post => (
-              <div key={post._id}>
-                  <Link to={`/edit-post/${post._id}`}>{post.title}</Link> - {new Date(post.createdAt).toLocaleDateString()}
+              <div className='flex w-full  flex-wrap justify-self-start 
+              h-auto gap-6 mb-4 border-b-black shadow-2xl bg-white text-black 
+              offset-4 p-4' key={post._id}>
+                <div>
+                  <Link to={`/edit-post/${post._id}`}>{post.title}</Link> 
+                  - {new Date(post.createdAt).toLocaleDateString()}
+                </div>
+                
                   {/* Add options to delete, view public post etc. */}
                    {/* Edit Button */}
-                <Link to={`/edit-post/${post._id}`}>
-                    <button style={{ marginRight: '10px' }}>Edit</button>
-                </Link>
-                {/* Delete Button */}
-                <button onClick={() => handleDelete(post._id)} style={{ backgroundColor: 'red', color: 'white' }}>
-                    Delete
-                </button>
+                   <div className='flex flex-wrap gap-4'>
+                      <Link to={`/edit-post/${post._id}`}>
+                        <button className='border border-amber-950 rounded p-1 w-20 
+                        hover:cursor-pointer'>Edit</button>
+                      </Link>
+                    {/* Delete Button */}
+                      <button className='border border-amber-950 rounded p-1 w-20 
+                      hover:cursor-pointer' onClick={() => handleDelete(post._id)} >
+                          Delete
+                      </button>
+                   </div>
+                
+                
               </div>
           ))}
+          
       </div>
-      <Link to="/submit-post">Submit a New Post</Link>
+      <Link className='bg-blue-900 text-white 
+      border border-amber-950 rounded p-1 w-60 hover:cursor-pointer ml-5 sm:ml-8 md:ml-12'  
+      to="/submit-post">Submit a New Post</Link>
     </div>
   )
 }

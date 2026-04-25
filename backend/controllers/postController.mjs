@@ -7,15 +7,40 @@ export const getAllPosts=async (req, res) => {
   const limit = parseInt(req.query.limit) || 5; // Default to 5 posts per page (matches frontend)
 
   const skip = (page - 1) * limit;
+  const { category } = req.query;
+  const { search } = req.query;
   try {
+    let filter = {};
+    if (category && category !== "null" && category !== "undefined") {
+      filter.category = category;
+    }
     // const posts = await Post.find().populate('author', 'username').sort({ createdAt: -1 });
     // res.json(posts);
-     const totalPosts = await Post.countDocuments(); // Get total count for pagination info
-     const posts = await Post.find()
-       .populate("author", "username")
+    console.log("Backend Filter applied:", filter);
+     if (search) {
+       filter.$or = [
+         { title: { $regex: search, $options: "i" } },
+         { category: { $regex: search, $options: "i" } },
+       ];
+     }
+     const totalPosts = await Post.countDocuments(filter); // Get total count for pagination info
+     const posts = await Post.find(filter)
+       .populate("author", "username firstName lastName profilePic")
        .sort({ createdAt: -1 })
        .skip(skip)
        .limit(limit);
+
+    console.log(
+      "Fetched posts with authors:",
+      posts.map((p) => ({
+        _id: p._id,
+        title: p.title,
+        authorId: p.author?._id, // Log author ID if available
+        authorName: p.author
+          ? `${p.author.firstName} ${p.author.lastName}`
+          : "NULL AUTHOR",
+      })),
+    );
 
      res.json({
        posts,
@@ -26,8 +51,8 @@ export const getAllPosts=async (req, res) => {
   } catch (error) {
     // console.error('Error fetching all posts:', error);
     // res.status(500).json({ message: 'Server error fetching posts.' });
-    console.error("Error fetching paginated posts:", err); // More specific error log
-    res.status(500).json({ message: err.message });
+    console.error("Error fetching paginated posts:", error); // More specific error log
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -35,7 +60,7 @@ export const getAllPosts=async (req, res) => {
 // Get a single post by ID
 export const getPostById =async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).populate('author', 'username');
+    const post = await Post.findById(req.params.id).populate('author', 'username firstName lastName profilePic');
     if (!post) {
       return res.status(404).json({ message: 'Post not found.' });
     }
@@ -88,8 +113,8 @@ export const createPost=async (req, res) => {
 export const getPostByUser=async (req, res) => {
     try {
         const myPosts = await Post.find({ author: req.user._id })
-                                  .populate('author', 'username')
-                                  .sort({ createdAt: -1 });
+          .populate("author", "username firstName lastName profilePic")
+          .sort({ createdAt: -1 });
         res.json(myPosts);
     } catch (error) {
         console.error('Error fetching user-specific posts:', error);

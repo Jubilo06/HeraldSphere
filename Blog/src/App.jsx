@@ -8,6 +8,7 @@ import Register from './components/Register'
 import PostForm from './components/PostForm'
 import PostList from './components/PostList'
 import Login from './components/Login'
+import EditProfile from './components/EditProfile'
 import WriterDashboard from './components/WriterDashboard'
 import WriterPostForm from './components/WriterPostForm'
 import MyPost from './components/MyPost'
@@ -15,36 +16,19 @@ import AdminDashboard from './components/AdminDashboard'
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { AuthContext, AuthProvider } from './components/AuthContext'
 import './App.css'
+import Nav from './components/Nav'
 
 
 function Navigation() {
   const { isAuthenticated, isAdmin, logout, user, register, login } = useContext(AuthContext);
 
   return (
-    <nav style={{ padding: '10px', background: '#f0f0f0', marginBottom: '20px' }}>
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', gap: '15px' }}>
-        <li><Link to="/">Home</Link></li>
-        <li><Link to="/posts">Blog Posts</Link></li> {/* Public blog list */}
-        {isAuthenticated ? (
-          <>
-            <li style={{ marginLeft: 'auto', marginRight: '10px', fontWeight: 'bold' }}>
-              Welcome, {user?.username}! ({user?.role})
-            </li>
-            {isAdmin && <li><Link to="/admin/dashboard">Admin Dashboard</Link></li>}
-            {/* Link for non-admin content writers to their dashboard */}
-            {!isAdmin && <li><Link to="/writer/dashboard">My Contributions</Link></li>} 
-            <li><button onClick={logout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}>Logout</button></li>
-          </>
-        ) : (
-          <>
-            <li><Link to="/login">Login</Link></li>
-            <li><Link to="/register">Register</Link></li>
-          </>
-        )}
-      </ul>
-    </nav>
+    <div>
+      <Nav />
+    </div>
   );
 }
+
 
 function App() {
   return (
@@ -59,11 +43,13 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/posts" element={<PublicPostList />} />
             <Route path="/posts/:id" element={<PublicPostDetail />} /> {/* Route for single public post */}
-
+            <Route path="/posts/category/:categoryName" element={<PublicPostList />} />
             {/* Protected Admin Routes */}
             <Route element={<ProtectedRoute  />}>
               {/* These routes are only accessible to authenticated admins */}
               <Route path="/writer/dashboard" element={<WriterDashboard />} />
+              <Route path="/edit-profile" element={<EditProfile />}
+        />
               <Route path="/my-posts" element={<MyPost />} /> {/* List posts by the current user */}
               {/* <Route path="/admin/posts" element={<PostList />} /> */}
               <Route path="/submit-post" element={<WriterPostForm />} />

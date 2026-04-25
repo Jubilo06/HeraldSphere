@@ -69,10 +69,12 @@ export const AuthProvider = ({ children }) => {
       // Combine user data and token for storage
       localStorage.setItem('token', receivedToken); // <-- NEW: Store token in its own key
       setToken(receivedToken); // <-- NEW: Update the token state
+       const userToStore = { ...userData };
+       userToStore.token = receivedToken;
       
-      const userWithToken = { ...userData, receivedToken };
-      localStorage.setItem('user', JSON.stringify(userWithToken));
-      setUser(userWithToken); // Update state
+      // const userWithToken = { ...userData, receivedToken };
+      localStorage.setItem('user', JSON.stringify(userToStore));
+      setUser(userToStore); // Update state
 
       console.log("AuthContext: User state updated and data stored in localStorage.");
       navigate('/admin/posts/new'); // Or wherever you want to navigate after login
@@ -95,10 +97,14 @@ export const AuthProvider = ({ children }) => {
   const isAuthenticated = !!token && !!user;
   const isAdmin = user && user.role === 'admin';
 
-   const register = async (userData) => {
+   const register = async (userData, config = {}) => {
     console.log("3. Inside the context's register function."); 
     try {
-      await api.post('/api/auth/register', userData);
+      const response = await api.post('/api/auth/register', userData, config);
+      if (response.data.token && response.data.user) {
+        login(response.data.user, response.data.token);
+      }
+      return response;
     } catch (error) {
       // console.error("Error from API call in context:", error); 
       // throw new Error(error.response?.data || 'An unknown error occurred.');
