@@ -17,6 +17,7 @@ function WriterPostForm() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('');
+  const [customCategory, setCustomCategory] = useState('');
   const [mainImageUrl, setMainImageUrl] = useState(''); // For the URL of the main image
 const [mainImageFile, setMainImageFile] = useState(null); // For the actual file to upload
   // Author will be derived from context for creation, not a state field for input by user
@@ -54,7 +55,12 @@ const [mainImageFile, setMainImageFile] = useState(null); // For the actual file
             return;
           }
           // --- END Permission Check ---
-
+           if (categories.includes(post.category)) {
+              setCategory(post.category);
+            } else {
+              setCategory('Other');
+              setCustomCategory(post.category);
+            }
           setTitle(post.title);
           setContent(post.content);
           setCategory(post.category || '');
@@ -178,6 +184,7 @@ const [mainImageFile, setMainImageFile] = useState(null); // For the actual file
             return; // Stop form submission if main image upload fails
         }
     }
+    const finalCategory = category === 'Other' ? customCategory : category;
 
     const postData = {
       title,
@@ -187,7 +194,7 @@ const [mainImageFile, setMainImageFile] = useState(null); // For the actual file
       // The author ID will be set by the backend based on req.user._id
       // No need to send 'author' from frontend directly for security
     };
-
+    
     try {
       if (isEditMode) {
         await api.put(`/api/posts/${id}`, postData); // Use your 'api' instance
@@ -250,6 +257,19 @@ const [mainImageFile, setMainImageFile] = useState(null); // For the actual file
               <option className='h-auto relative' key={cat} value={cat}>{cat}</option>
             ))}
           </select>
+
+          {category === 'Other' && (
+            <div className="flex-1 animate-in fade-in slide-in-from-left-2 duration-300">
+              <input
+                type="text"
+                placeholder="Enter custom category name"
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+                className="w-full border border-indigo-500 rounded p-2 focus:ring-2 focus:ring-indigo-200 outline-none"
+                required
+              />
+            </div>
+          )}
         </div>
 
         <div className="form-group quill-editor-group min-h-100 flex flex-col 
@@ -333,49 +353,7 @@ const [mainImageFile, setMainImageFile] = useState(null); // For the actual file
     PNG, JPG or WEBP (Max 10MB)
   </p>
 </div>
-        {/* <div className="form-group mb-10 "> */}
-          {/* <label htmlFor="mainImage">Featured Image:</label>
-          <input
-            type="file"
-            id="mainImage"
-            accept="image/*"
-            onChange={(e) => {
-                setMainImageFile(e.target.files[0]);
-                setMainImageUrl(''); // Clear previous URL if new file is selected
-            }}
-            className="form-input"
-          /> */}
-          {/* {mainImageUrl && ( // Display existing or newly uploaded main image
-            <div style={{ marginTop: '10px' }}>
-              <img src={mainImageUrl} alt="Featured Post" style={{ maxWidth: '200px', display: 'block' }} />
-              <button
-                type="button"
-                onClick={() => {
-                  setMainImageUrl(null); // Set to null to remove it from the post
-                  setMainImageFile(null); // Clear any pending file
-                }}
-                style={{ marginTop: '5px' }}
-              >
-                Remove Image
-              </button>
-            </div>
-          )} */}
-          {/* If you want to show a preview of a newly selected file before upload */}
-          {/* {mainImageFile && !mainImageUrl && (
-              <div style={{ marginTop: '10px' }}>
-                  <img src={URL.createObjectURL(mainImageFile)} alt="New Featured" style={{ maxWidth: '200px', display: 'block' }} />
-                  <button
-                    type="button"
-                    onClick={() => setMainImageFile(null)}
-                    style={{ marginTop: '5px' }}
-                  >
-                    Clear Selected File
-                  </button>
-              </div>
-          )} */}
-        {/* </div> */}
-        {/* Author field removed for direct user input, as backend sets it securely */}
-        {/* {error && <p style={{ color: 'red' }}>Error: {error}</p>} */}
+        
         {error && <p style={{ color: 'red', margin: '10px 0' }}>Error: {error}</p>}
         <button className='border border-black text-white bg-gray-950 rounded p-1' type="submit" disabled={loading}>
           {loading ? 'Saving...' : (isEditMode ? 'Update Post' : 'Create Post')}

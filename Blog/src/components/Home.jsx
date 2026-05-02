@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import Particles from './Particles';
 import Orb from './Orb';
 import PublicPostList from './PublicPostList';
+import Footer from './Footer';
 
 function Home() {
   const { user, isAuthenticated, isAdmin, logout } = useContext(AuthContext);
@@ -17,9 +18,11 @@ function Home() {
       
       {isAuthenticated ? (
         <>
-          <p>Hello, {user.username} ({user.role})</p>
-          {isAdmin && <p><Link to="/admin/posts">Go to Admin Dashboard</Link></p>}
-          <button onClick={logout}>Logout</button>
+          {/* <p className='mb-4'>Hello, {user.username} ({user.role})</p> */}
+          {isAdmin && <p><Link className='border border-white shadow-2xs bg-gray-700 rounded hover:shadow-xl 
+          hover:-translate-y-1 transition-all duration-300  
+          text-white w-auto p-2 hover:border-indigo-100 ' to="/admin/posts">Go to Admin Dashboard</Link></p>}
+          {/* <button onClick={logout}>Logout</button> */}
         </>
       ) : (
         <p><Link to="/login">Login</Link> or <Link to="/register">Register</Link> to get started.</p>
@@ -83,6 +86,7 @@ function Home() {
     <div className='w-full pt-10'>
       <PublicPostList />
     </div>
+    <div><Footer /></div>
     </div>
   );
 }

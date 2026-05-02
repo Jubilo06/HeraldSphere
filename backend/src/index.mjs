@@ -8,12 +8,14 @@ import cors from "cors";
 import bcrypt from "bcrypt";
 import authRoutes from "../routes/auth.mjs";
 import postRoutes from "../routes/post.mjs";
+import contactRoutes from "../routes/contact.mjs";
 import multer from 'multer';
 import fs from 'fs'; // Node.js built-in file system module
 import path from "path";
 import { fileURLToPath } from "url";
 import { authenticateJWT } from "../controllers/authController.mjs";
 import createAuthRouter from '../routes/auth.mjs'
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -145,6 +147,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 // If you have a separate userRoute.mjs for admin functions, mount it here
 // app.use('/api/users', userRoutes);
+app.use('/api/contact', contactRoutes)
 
 app.get("/api/protected", authenticateJWT, (req, res) => {
   res.json({

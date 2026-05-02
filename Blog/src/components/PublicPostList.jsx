@@ -14,7 +14,7 @@ function PublicPostList() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const categories = ['Science', 'Business', 'Technology', 'Health', 'Sports', 'Opinion'];
+  const categories = ['Science', 'Business', 'Technology', 'Health', 'Sports', 'Opinion', 'Other'];
 
   useEffect(() => {
     const pageFromUrl = parseInt(searchParams.get('page')) || 1;
@@ -59,7 +59,7 @@ function PublicPostList() {
 
   return (
     <div className='w-full'>
-      <form onSubmit={handleSearch} className="mb-8 flex gap-2 w-[80%] justify-self-start">
+      <form onSubmit={handleSearch} className="mb-8 flex gap-2 w-[90%] justify-self-center">
         <input 
           type="text" 
           placeholder="Search by title or category..." 
@@ -69,7 +69,7 @@ function PublicPostList() {
         />
         <button type="submit" className="bg-blue-600 text-white p-2 rounded-lg">Search</button>
       </form>
-      <h1 className='text-5xl font-extrabold ml-10 mb-10'>Explore Categories</h1>
+      {/* <h1 className='text-5xl font-extrabold ml-10 mb-10'>Explore Categories</h1>
       <div className='flex flex-wrap flex-3 w-[90%] justify-self-center '>
         {categories.map(cat => (
                   <Link 
@@ -82,11 +82,57 @@ function PublicPostList() {
                   {cat}
                   </Link>
       ))}
-      </div>
+      </div> */}
+      <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+  {/* SECTION HEADER */}
+  <div className="text-center mb-12">
+    <h2 className="text-sm font-bold text-indigo-600 uppercase tracking-[0.3em] mb-3">
+      Browse by Topic
+    </h2>
+    <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
+      Explore <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-600 to-purple-600">Categories</span>
+    </h1>
+    <div className="mt-4 h-1 w-24 bg-gray-100 mx-auto rounded-full relative overflow-hidden">
+        <div className="absolute inset-0 bg-indigo-600 w-1/2 animate-pulse"></div>
+    </div>
+  </div>
+
+  {/* CATEGORY GRID */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+    {categories.map((cat) => (
+      <Link
+        key={cat}
+        to={`/posts/category/${cat}`}
+        className="group relative flex items-center justify-between p-5 bg-white border
+         border-gray-100 rounded-2xl shadow-sm hover:shadow-xl
+         hover:border-indigo-100 hover:-translate-y-1 transition-all duration-300"
+      >
+        <div className="flex items-center space-x-4">
+          {/* Icon Placeholder (Circle with initial) */}
+          <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
+            <span className="text-xs font-black uppercase">{cat.substring(0, 2)}</span>
+          </div>
+          
+          <span className="font-bold text-gray-700 group-hover:text-indigo-600 transition-colors">
+            {cat}
+          </span>
+        </div>
+
+        {/* Small Arrow that appears on hover */}
+        <div className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">
+          <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+
+        {/* Decorative corner element */}
+        <div className="absolute top-0 right-0 h-1 w-0 bg-indigo-600 transition-all duration-300 group-hover:w-full rounded-t-2xl"></div>
+      </Link>
+    ))}
+  </div>
+</div>
       
-      {/* <h2 className="text-2xl font-bold ml-10 mt-10 mb-10">
-       {categoryName ? `${categoryName} News` : "Latest Blog Posts"}
-      </h2> */}
+  
      <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
   {/* SECTION HEADER */}
   <div className="flex items-center justify-between mb-12 border-b border-gray-100 pb-4">
@@ -182,25 +228,7 @@ function PublicPostList() {
   )}
 </div>
 
-      {/* <h2>Latest Blog Posts</h2> */}
-      
-
-      {/* Pagination Controls */}
-      {/* <div className="pagination pb-10">
-        <button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-        >
-         ⬅ Previous
-        </button>
-        <span> Page {currentPage} of {totalPages} </span>
-        <button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-        >
-          Next ➡
-        </button>
-      </div> */}
+  
       <div className="flex flex-col items-center justify-center space-y-4 py-16 mb-10">
   {/* The Pagination Container */}
   <nav className="flex items-center space-x-2 bg-white p-2 rounded-full shadow-lg border border-gray-100">

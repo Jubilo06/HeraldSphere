@@ -19,15 +19,7 @@ const postSchema = new Schema({
   },
   category: {
     type: String,
-    enum: [
-      "Science",
-      "Business",
-      "Technology",
-      "Health",
-      "Sports",
-      "Opinion",
-      "Other",
-    ], // Example enum
+    trim:true,
     required: true,
   },
   mainImageUrl: {

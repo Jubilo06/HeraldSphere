@@ -17,7 +17,12 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react
 import { AuthContext, AuthProvider } from './components/AuthContext'
 import './App.css'
 import Nav from './components/Nav'
-
+import Footer from './components/Footer'
+import About from './components/About'
+import Contact from './components/Contact'
+import { Terms } from './components/Terms'
+import { Privacy } from './components/Privacy'
+import { Cookies } from './components/Cookies'
 
 function Navigation() {
   const { isAuthenticated, isAdmin, logout, user, register, login } = useContext(AuthContext);
@@ -44,6 +49,12 @@ function App() {
             <Route path="/posts" element={<PublicPostList />} />
             <Route path="/posts/:id" element={<PublicPostDetail />} /> {/* Route for single public post */}
             <Route path="/posts/category/:categoryName" element={<PublicPostList />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/cookies" element={<Cookies />} />
+            
             {/* Protected Admin Routes */}
             <Route element={<ProtectedRoute  />}>
               {/* These routes are only accessible to authenticated admins */}
@@ -60,7 +71,7 @@ function App() {
             {/* Uses ProtectedRoute WITH adminOnly prop */}
             <Route element={<ProtectedRoute adminOnly={true} />}>
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/posts" element={<PostList />} /> {/* Admin can see ALL posts */}
+              <Route path="/admin/posts" element={<AdminDashboard />} /> {/* Admin can see ALL posts */}
               <Route path="/admin/posts/new" element={<WriterPostForm />} /> {/* Admin can create posts */}
               <Route path="/admin/posts/edit/:id" element={<WriterPostForm />} /> {/* Admin can edit ANY post */}
             </Route>

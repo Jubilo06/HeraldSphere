@@ -1,5 +1,75 @@
 import Post from "../models/Post.mjs";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import Subscriber from "../models/Subscriber.mjs";
+import SibApiV3Sdk from "sib-api-v3-sdk";
 
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Helper to delete local files
+const deleteLocalFile = (imageUrl) => {
+  if (!imageUrl || imageUrl.startsWith("http")) return; // Don't delete external URLs
+
+  // Extract local path: /uploads/post_images/filename.jpg -> backend/uploads/post_images/filename.jpg
+  const relativePath = imageUrl.split("http://localhost:5014")[1] || imageUrl;
+  const filePath = path.join(__dirname, "..", relativePath);
+
+  if (fs.existsSync(filePath)) {
+    fs.unlink(filePath, (err) => {
+      if (err) console.error("Failed to delete local image:", err);
+      else console.log("Deleted local image:", filePath);
+    });
+  }
+};
+
+// Trigger this after post is saved
+const notifySubscribers = async (post) => {
+  const subscribers = await Subscriber.find();
+  if (subscribers.length === 0) return;
+
+  const defaultClient = SibApiV3Sdk.ApiClient.instance;
+  const apiKey = defaultClient.authentications['api-key'];
+  apiKey.apiKey = process.env.BREVO_API_KEY;
+
+  const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+  
+  const sendEmail = {
+    sender: { name: "Herald Sphere", email: process.env.SENDER_EMAIL },
+    to: subscribers.map(sub => ({ email: sub.email })),
+    subject: `Fresh Story: ${post.title}`,
+    htmlContent: `
+      <div style="font-family: 'Helvetica', sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;">
+        <div style="background-color: #4f46e5; padding: 20px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">Herald Sphere</h1>
+        </div>
+        <div style="padding: 30px;">
+          <p style="color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; font-weight: bold;">New Article Published</p>
+          <h2 style="color: #0f172a; font-size: 22px;">${post.title}</h2>
+          <img src="${post.mainImageUrl}" style="width: 100%; border-radius: 12px; margin: 20px 0;" />
+          <p style="color: #475569; line-height: 1.6;">A new dispatch has arrived in the Sphere. Be the first to read our latest insights.</p>
+          <a href="http://localhost:5173/posts/${post._id}" 
+             style="display: inline-block; background-color: #4f46e5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px;">
+             Read Full Article
+          </a>
+        </div>
+        <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+          <p style="color: #94a3b8; font-size: 11px;">You are receiving this because you subscribed to Herald Sphere. <br/> <a href="#">Unsubscribe</a></p>
+        </div>
+      </div>
+    `
+  };
+
+  try {
+    await apiInstance.sendTransacEmail(sendEmail);
+    console.log("Newsletter sent to subscribers");
+  } catch (err) {
+    console.error("Brevo Error:", err);
+  }
+};
 
 
 export const getAllPosts=async (req, res) => {
@@ -84,7 +154,9 @@ export const createPost=async (req, res) => {
 
     // Basic validation
     if (!title || !content || !category) {
-      return res.status(400).json({ message: 'Title, content, and category are required.' });
+      return res
+        .status(400)
+        .json({ message: "Title, content, and category are required." });
     }
 
     const newPost = new Post({
@@ -93,12 +165,13 @@ export const createPost=async (req, res) => {
       category,
       author: req.user._id,
       mainImageUrl,
-      // IMPORTANT: Set author from the authenticated user's ID
-      // If you had a 'mainImage' field, it would be handled here based on `req.file` from multer
-      // e.g., imageUrl: req.file ? `/uploads/${req.file.filename}` : undefined
     });
 
     await newPost.save();
+
+    // RUN THIS AFTER SUCCESS
+    notifySubscribers(savedPost);
+
     res.status(201).json(newPost);
   } catch (error) {
     console.error('Error creating post:', error);
@@ -129,22 +202,18 @@ export const updatePost=async (req, res) => {
     const { post } = req; // Post object is already fetched and attached by checkPostOwnershipOrAdmin
 
     const { title, content, category, mainImageUrl } = req.body;
-
+    if (
+      mainImageUrl &&
+      post.mainImageUrl &&
+      mainImageUrl !== post.mainImageUrl
+    ) {
+      deleteLocalFile(post.mainImageUrl);
+    }
     // Update fields if provided
     post.title = title || post.title;
     post.content = content || post.content;
     post.category = category || post.category;
-    if (mainImageUrl !== undefined) {
-      // Check if it's explicitly sent in the body
-      post.mainImageUrl = mainImageUrl;
-    }
-    // IMPORTANT: Do NOT allow changing `post.author` via this PUT endpoint
-    // It should only be updatable by an admin through a dedicated admin function if ever.
-
-    // Handle updating a potential 'mainImage' if you had one via multer
-    // if (req.file) { /* ... delete old file, set new file ... */ }
-    // if (req.body.removeMainImage) { post.imageUrl = null; } // If frontend sends flag to remove main image
-
+    post.mainImageUrl = mainImageUrl !== undefined ? mainImageUrl : post.mainImageUrl;
     await post.save();
     res.json(post);
   } catch (error) {
@@ -159,17 +228,9 @@ export const updatePost=async (req, res) => {
 export const deletePost=async (req, res) => {
   try {
     const { post } = req; // Post object is already fetched and attached by checkPostOwnershipOrAdmin
-
-    // Optional: Delete associated image files from server storage
-    // if (post.imageUrl) {
-    //   const imagePath = path.join(__dirname, '..', '..', 'uploads', path.basename(post.imageUrl));
-    //   if (fs.existsSync(imagePath)) {
-    //     fs.unlinkSync(imagePath);
-    //   }
-    // }
-    // If you need to parse content and find all embedded Quill images to delete them,
-    // that's a more complex task involving HTML parsing.
-
+    if (post.mainImageUrl) {
+      deleteLocalFile(post.mainImageUrl);
+    }
     await Post.findByIdAndDelete(req.params.id); // Or post.remove() if you've already found it
     res.status(200).json({ message: 'Post deleted successfully.' });
   } catch (error) {
@@ -180,14 +241,22 @@ export const deletePost=async (req, res) => {
 
 // --- ADMIN-SPECIFIC ROUTES (Requires 'admin' role) ---
 
-// Get all posts for admin view (might include drafts, unapproved, etc., if your model supports it)
-// This is redundant with router.get('/') currently, but could be extended later
-// For now, if /admin/posts should show *all* posts, keep router.get('/') public
-// or make this specific for admin-only features.
 export const getAdminPost=async (req, res) => {
-    try {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const totalPosts = await Post.countDocuments();
+  const post = await Post.find().skip(skip).limit(limit);  
+  try {
+      
         const posts = await Post.find().populate('author', 'username').sort({ createdAt: -1 });
-        res.json(posts);
+        // res.json(posts);
+        res.json({
+          posts,
+          totalPages: Math.ceil(totalPosts / limit),
+          totalPosts,
+        });
     } catch (error) {
         console.error('Error fetching all posts for admin:', error);
         res.status(500).json({ message: 'Server error fetching posts for admin.' });
@@ -225,6 +294,59 @@ export const checkPostOwnershipOrAdmin = async (req, res, next) => {
   }
 };
 
+export const handleContactForm = async (req, res) => {
+  const { name, email, subject, message } = req.body;
+
+  if (!name || !email || !subject || !message) {
+    return res.status(400).json({ message: "All fields are required." });
+  }
+
+  // Initialize Brevo
+  const defaultClient = SibApiV3Sdk.ApiClient.instance;
+  const apiKey = defaultClient.authentications["api-key"];
+  apiKey.apiKey = process.env.BREVO_API_KEY;
+
+  const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+
+  const sendEmail = {
+    sender: {
+      name: "Herald Sphere Contact System",
+      email: process.env.SENDER_EMAIL,
+    },
+    to: [{ email: process.env.SENDER_EMAIL }], // Send TO yourself
+    replyTo: { email: email, name: name }, // So you can click "Reply" in your email
+    subject: `[CONTACT FORM] ${subject}`,
+    htmlContent: `
+      <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee;">
+        <h2 style="color: #4f46e5;">New Message from Herald Sphere</h2>
+        <p><strong>From:</strong> ${name} (${email})</p>
+        <p><strong>Subject:</strong> ${subject}</p>
+        <hr/>
+        <p style="white-space: pre-wrap;">${message}</p>
+      </div>
+    `,
+  };
+
+  try {
+    await apiInstance.sendTransacEmail(sendEmail);
+    res.status(200).json({ message: "Transmission received successfully." });
+  } catch (error) {
+    console.error("Brevo Contact Error:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to send message. Please try again later." });
+  }
+};
+
+export const getSubscriberCount = async (req, res) => {
+  try {
+    const count = await Subscriber.countDocuments();
+    res.json({ totalSubscribers: count });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch subscriber count" });
+  }
+};
+
 const postController = {
   getAllPosts,
   getPostById,
@@ -232,7 +354,9 @@ const postController = {
   updatePost,
   getPostByUser,
   deletePost,
-  getAdminPost
+  getAdminPost,
+  handleContactForm,
+  getSubscriberCount
 };
 
 export default postController;

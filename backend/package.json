@@ -13,6 +13,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@mailchimp/mailchimp_marketing": "^3.0.80",
     "bcrypt": "^6.0.0",
     "connect-mongo": "^6.0.0",
     "cookie-parser": "^1.4.7",
@@ -29,7 +30,9 @@
     "multer": "^2.1.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "rss": "^1.2.2",
+    "sib-api-v3-sdk": "^8.5.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

@@ -1,5 +1,6 @@
 import React from 'react'
 import axios from 'axios'
+import Footer from './Footer';
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
@@ -93,7 +94,7 @@ function PostList() {
         {/* You could add buttons for specific page numbers */}
       </div>
 
-      
+      <Footer />  
     </div>
   )
 }

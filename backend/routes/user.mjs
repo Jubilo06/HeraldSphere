@@ -18,21 +18,7 @@ router.get("/api/profile", ensureAuthenticated, (req, res) => {
   res.json(req.user);
 });
 
-// Door 1: Register a new user
-// router.post("/api/register", async (req, res) => {
-//   try {
-//     const { username, password } = req.body;
-//     const existingUser = await User.findOne({ username });
-//     if (existingUser) {
-//       return res.status(400).send("Username already exists.");
-//     }
-//     const newUser = new User({ username, password });
-//     await newUser.save();
-//     res.status(201).send("User registered successfully! Please log in.");
-//   } catch (error) {
-//     res.status(500).send("Server error");
-//   }
-// });
+
 
 router.post(
   "/api/login",

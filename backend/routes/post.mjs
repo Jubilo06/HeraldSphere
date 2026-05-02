@@ -10,6 +10,9 @@ router.get("/my-posts", authenticateJWT, postController.getPostByUser);
 // GET all posts
 router.get('/', postController.getAllPosts);
 
+
+router.post("/contact", postController.handleContactForm);
+
 // GET a single post by ID
 router.get('/:id', postController.getPostById);
 
@@ -32,6 +35,12 @@ router.get(
   postController.getAdminPost
 );
 
+router.get(
+  "/admin/subscribers/count",
+  authenticateJWT,
+  authorizeRole("admin"),
+  postController.getSubscriberCount,
+);
 // DELETE a post by ID
 router.delete('/:id', authenticateJWT,
   checkPostOwnershipOrAdmin, postController.deletePost);

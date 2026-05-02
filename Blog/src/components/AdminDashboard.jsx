@@ -7,132 +7,423 @@ function AdminDashboard() {
   const [posts, setPosts] = useState([]); // This will be all posts, not just admin's
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [usersPage, setUsersPage] = useState(1);
+  const [totalSubscribers, setTotalSubscribers] = useState(0);
+  const [totalUsersPages, setTotalUsersPages] = useState(1);
+  const [postsPage, setPostsPage] = useState(1);
+  const [totalPostsPages, setTotalPostsPages] = useState(1);
+  // Total Counts for Stats
+  const [totalUsersCount, setTotalUsersCount] = useState(0);
+  const [totalPostsCount, setTotalPostsCount] = useState(0);
+   const limit = 10; // Items per page
 
-  useEffect(() => {
-    const fetchAdminData = async () => {
+  // Fetch Users
+  const fetchUsers = async () => {
+    try {
+      const res = await api.get(`/api/auth/admin/users?page=${usersPage}&limit=${limit}`);
+      // Assuming backend returns { users, totalPages, totalUsers }
+      setUsers(res.data.users || res.data); 
+      setTotalUsersPages(res.data.totalPages || 1);
+      setTotalUsersCount(res.data.totalUsers || res.data.length);
+    } catch (err) {
+      setError("Failed to load users.");
+    }
+  };
+  
+  // Fetch Posts
+  const fetchPosts = async () => {
+    try {
+      const res = await api.get(`/api/posts/admin/all?page=${postsPage}&limit=${limit}`);
+      // Assuming backend returns { posts, totalPages, totalPosts }
+      setPosts(res.data.posts || res.data);
+      setTotalPostsPages(res.data.totalPages || 1);
+      setTotalPostsCount(res.data.totalPosts || res.data.length);
+    } catch (err) {
+      setError("Failed to load posts.");
+    }
+  };
+
+  const fetchSubscriberCount = async () => {
+  try {
+    const res = await api.get('/api/posts/admin/subscribers/count');
+    setTotalSubscribers(res.data.totalSubscribers);
+  } catch (err) {
+    console.error("Error fetching subscribers:", err);
+  }
+};
+
+   useEffect(() => {
+    const loadData = async () => {
       setLoading(true);
-      setError(null);
-      try {
-        // Fetch all users
-        const usersResponse = await api.get('/api/auth/admin/users'); // Using /api/auth for users
-        setUsers(usersResponse.data);
-
-        // Fetch all posts (using your existing admin endpoint)
-        const postsResponse = await api.get('/api/posts/admin/all');
-        setPosts(postsResponse.data);
-
-      } catch (err) {
-        console.error("Error fetching admin data:", err);
-        setError(err.response?.data?.message || 'Failed to load admin data.');
-      } finally {
-        setLoading(false);
-      }
+      await Promise.all([fetchUsers(), fetchPosts(), fetchSubscriberCount()]);
+      setLoading(false);
     };
+    loadData();
+  }, [usersPage, postsPage]); // Re-fetch when page numbers change
 
-    fetchAdminData();
-  }, []);
-
-  // --- User Management Handlers (similar to post delete) ---
   const handleDeleteUser = async (userId) => {
-    if (window.confirm("Are you sure you want to delete this user and ALL their posts?")) {
+    if (window.confirm("Permanently delete this user?")) {
       try {
         await api.delete(`/api/auth/admin/users/${userId}`);
-        setUsers(users.filter(user => user._id !== userId));
-        // You might need to re-fetch posts too if deleting a user should remove their posts from the list
-        // Or handle cascading delete on the backend.
-        alert("User deleted successfully.");
-      } catch (err) {
-        console.error('Error deleting user:', err);
-        setError(err.response?.data?.message || 'Failed to delete user.');
-      }
+        fetchUsers(); // Re-fetch current page
+      } catch (err) { setError(err.response?.data?.message); }
     }
   };
 
-  // --- Post Management Handlers (already implemented in principle for user's own posts) ---
   const handleDeletePost = async (postId) => {
-    if (window.confirm("Are you sure you want to delete this post?")) {
+    if (window.confirm("Permanently delete this article?")) {
       try {
-        await api.delete(`/api/posts/${postId}`); // This uses the shared delete endpoint
-        setPosts(posts.filter(post => post._id !== postId));
-        alert("Post deleted successfully.");
-      } catch (err) {
-        console.error('Error deleting post:', err);
-        setError(err.response?.data?.message || 'Failed to delete post.');
-      }
+        await api.delete(`/api/posts/${postId}`);
+        fetchPosts(); // Re-fetch current page
+      } catch (err) { setError(err.response?.data?.message); }
     }
   };
 
-  if (loading) return <div>Loading Admin Dashboard...</div>;
+  //  useEffect(() => {
+  //   const fetchAdminData = async () => {
+  //     setLoading(true);
+  //     setError(null);
+  //     try {
+  //       // Fetch all users
+  //       const usersResponse = await api.get('/api/auth/admin/users'); // Using /api/auth for users
+  //       setUsers(usersResponse.data);
+
+  //       // Fetch all posts (using your existing admin endpoint)
+  //       const postsResponse = await api.get('/api/posts/admin/all');
+  //       setPosts(postsResponse.data);
+
+  //     } catch (err) {
+  //       console.error("Error fetching admin data:", err);
+  //       setError(err.response?.data?.message || 'Failed to load admin data.');
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchAdminData();
+  // }, []);
+
+  // --- User Management Handlers (similar to post delete) ---
+  // const handleDeleteUser = async (userId) => {
+  //   if (window.confirm("Are you sure you want to delete this user and ALL their posts?")) {
+  //     try {
+  //       await api.delete(`/api/auth/admin/users/${userId}`);
+  //       setUsers(users.filter(user => user._id !== userId));
+  //       // You might need to re-fetch posts too if deleting a user should remove their posts from the list
+  //       // Or handle cascading delete on the backend.
+  //       alert("User deleted successfully.");
+  //     } catch (err) {
+  //       console.error('Error deleting user:', err);
+  //       setError(err.response?.data?.message || 'Failed to delete user.');
+  //     }
+  //   }
+  // };
+
+  // // --- Post Management Handlers (already implemented in principle for user's own posts) ---
+  // const handleDeletePost = async (postId) => {
+  //   if (window.confirm("Are you sure you want to delete this article?")) {
+  //     try {
+  //       await api.delete(`/api/posts/${postId}`); // This uses the shared delete endpoint
+  //       setPosts(posts.filter(post => post._id !== postId));
+  //       alert("Post deleted successfully.");
+  //     } catch (err) {
+  //       console.error('Error deleting post:', err);
+  //       setError(err.response?.data?.message || 'Failed to delete post.');
+  //     }
+  //   }
+  // };
+
+   // Reusable Pagination Component
+  const PaginationControls = ({ current, total, onChange }) => (
+    <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-gray-100">
+      <p className="text-xs text-gray-500 font-medium uppercase tracking-widest">
+        Page {current} of {total}
+      </p>
+      <div className="flex gap-2">
+        <button 
+          onClick={() => onChange(current - 1)}
+          disabled={current === 1}
+          className="px-3 py-1 text-xs font-bold uppercase tracking-tighter bg-white border border-gray-200 rounded-lg disabled:opacity-30 hover:bg-gray-50 transition"
+        >
+          Prev
+        </button>
+        <button 
+          onClick={() => onChange(current + 1)}
+          disabled={current === total}
+          className="px-3 py-1 text-xs font-bold uppercase tracking-tighter bg-white border border-gray-200 rounded-lg disabled:opacity-30 hover:bg-gray-50 transition"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+
+  // if (loading) return <div>Loading Admin Dashboard...</div>;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+    </div>
+  );
   if (error) return <p style={{ color: 'red' }}>Error: {error}</p>;
   return (
-    <div>
-      <h2>Admin Dashboard</h2>
-      <section className="admin-section">
-        <h3>Manage Users ({users.length})</h3>
-        {users.length === 0 ? (
-            <p>No users found.</p>
-        ) : (
-            <table>
-            <thead>
-                <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {users.map(user => (
-                <tr key={user._id}>
-                    <td>{user._id}</td>
-                    <td>{user.username}</td>
-                    <td>{user.role}</td>
-                    <td>
-                    {/* Only allow deleting non-admin users, or prevent self-deletion */}
-                    {user.role !== 'admin' && ( // Example: Don't allow deleting other admins directly here
-                        <button onClick={() => handleDeleteUser(user._id)} style={{ backgroundColor: 'red', color: 'white', marginRight: '5px' }}>Delete</button>
-                    )}
-                    {/* <Link to={`/admin/users/edit/${user._id}`}><button>Edit</button></Link> */}
-                    </td>
-                </tr>
-                ))}
-            </tbody>
-            </table>
-        )}
-      </section>
+    
+    // <div className="min-h-screen bg-gray-50/50 pb-20">
+    //   {/* TOP HEADER */}
+    //   <div className="bg-white border-b border-gray-200 pt-10 pb-6 mb-8">
+    //     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    //       <h1 className="text-3xl font-black text-gray-900 tracking-tight">Admin <span className="text-indigo-600">Command Center</span></h1>
+    //       <p className="text-gray-500 mt-1 text-sm font-medium">Manage your writers, users, and global content.</p>
+    //     </div>
+    //   </div>
 
-      <section className="admin-section" style={{ marginTop: '30px' }}>
-        <h3>Manage All Posts ({posts.length})</h3>
-        {posts.length === 0 ? (
-            <p>No posts found.</p>
-        ) : (
-            <table>
-            <thead>
-                <tr>
-                <th>ID</th>
-                <th>Title</th>
-                <th>Author</th>
-                <th>Category</th>
-                <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {posts.map(post => (
-                <tr key={post._id}>
-                    <td>{post._id}</td>
-                    <td>{post.title}</td>
-                    <td>{post.author?.username || 'N/A'}</td> {/* Populate author in backend */}
-                    <td>{post.category}</td>
-                    <td>
-                    <Link to={`/edit-post/${post._id}`}><button style={{ marginRight: '5px' }}>Edit</button></Link>
-                    <button onClick={() => handleDeletePost(post._id)} style={{ backgroundColor: 'red', color: 'white' }}>Delete</button>
-                    </td>
-                </tr>
-                ))}
-            </tbody>
-            </table>
-        )}
-      </section>
+    //   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+    //     {error && (
+    //       <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 flex items-center justify-between rounded-md">
+    //         <span>{error}</span>
+    //         <button onClick={() => setError(null)} className="text-red-900 font-bold">×</button>
+    //       </div>
+    //     )}
+
+    //     {/* STATS OVERVIEW */}
+    //     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    //       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+    //         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Users</p>
+    //         <h2 className="text-4xl font-black text-gray-900 mt-2">{users.length}</h2>
+    //       </div>
+    //       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+    //         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Global Posts</p>
+    //         <h2 className="text-4xl font-black text-indigo-600 mt-2">{posts.length}</h2>
+    //       </div>
+    //       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+    //         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Active Writers</p>
+    //         <h2 className="text-4xl font-black text-purple-600 mt-2">
+    //           {users.filter(u => u.role === 'writer').length}
+    //         </h2>
+    //       </div>
+    //     </div>
+
+    //     {/* USERS TABLE */}
+    //     <section className="mb-12">
+    //       <div className="flex items-center justify-between mb-4">
+    //         <h3 className="text-xl font-bold text-gray-800">User Directory</h3>
+    //       </div>
+    //       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    //         <div className="overflow-x-auto">
+    //           <table className="w-full text-left">
+    //             <thead className="bg-gray-50 border-b border-gray-100">
+    //               <tr>
+    //                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">User Details</th>
+    //                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Role</th>
+    //                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Database ID</th>
+    //                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-right">Actions</th>
+    //               </tr>
+    //             </thead>
+    //             <tbody className="divide-y divide-gray-50">
+    //               {users.map(user => (
+    //                 <tr key={user._id} className="hover:bg-gray-50 transition-colors">
+    //                   <td className="px-6 py-4">
+    //                     <div className="flex items-center">
+    //                       <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs mr-3">
+    //                         {user.username.charAt(0).toUpperCase()}
+    //                       </div>
+    //                       <span className="font-bold text-gray-900">{user.username}</span>
+    //                     </div>
+    //                   </td>
+    //                   <td className="px-6 py-4">
+    //                     <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter ${
+    //                       user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+    //                     }`}>
+    //                       {user.role}
+    //                     </span>
+    //                   </td>
+    //                   <td className="px-6 py-4 text-xs text-gray-400 font-mono">{user._id}</td>
+    //                   <td className="px-6 py-4 text-right">
+    //                     {user.role !== 'admin' && (
+    //                       <button 
+    //                         onClick={() => handleDeleteUser(user._id)}
+    //                         className="text-red-500 hover:text-red-700 font-bold text-xs uppercase tracking-widest transition"
+    //                       >
+    //                         Terminate
+    //                       </button>
+    //                     )}
+    //                   </td>
+    //                 </tr>
+    //               ))}
+    //             </tbody>
+    //           </table>
+    //         </div>
+    //       </div>
+    //     </section>
+
+    //     {/* POSTS TABLE */}
+    //     <section>
+    //       <div className="flex items-center justify-between mb-4">
+    //         <h3 className="text-xl font-bold text-gray-800">Content Management</h3>
+    //       </div>
+    //       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    //         <div className="overflow-x-auto">
+    //           <table className="w-full text-left">
+    //             <thead className="bg-gray-50 border-b border-gray-100">
+    //               <tr>
+    //                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Article Title</th>
+    //                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Author</th>
+    //                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Category</th>
+    //                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-right">Actions</th>
+    //               </tr>
+    //             </thead>
+    //             <tbody className="divide-y divide-gray-50">
+    //               {posts.map(post => (
+    //                 <tr key={post._id} className="hover:bg-gray-50 transition-colors">
+    //                   <td className="px-6 py-4">
+    //                     <Link to={`/posts/${post._id}`} className="font-bold text-gray-900 hover:text-indigo-600 transition-colors line-clamp-1">
+    //                       {post.title}
+    //                     </Link>
+    //                   </td>
+    //                   <td className="px-6 py-4">
+    //                     <span className="text-sm text-gray-600 font-medium">{post.author?.username || 'System'}</span>
+    //                   </td>
+    //                   <td className="px-6 py-4">
+    //                     <span className="text-[10px] font-black text-gray-400 uppercase bg-gray-100 px-2 py-1 rounded">
+    //                       {post.category}
+    //                     </span>
+    //                   </td>
+    //                   <td className="px-6 py-4 text-right space-x-4">
+    //                     <Link 
+    //                       to={`/edit-post/${post._id}`}
+    //                       className="text-indigo-600 hover:text-indigo-800 font-bold text-xs uppercase tracking-widest"
+    //                     >
+    //                       Edit
+    //                     </Link>
+    //                     <button 
+    //                       onClick={() => handleDeletePost(post._id)}
+    //                       className="text-red-500 hover:text-red-700 font-bold text-xs uppercase tracking-widest transition"
+    //                     >
+    //                       Delete
+    //                     </button>
+    //                   </td>
+    //                 </tr>
+    //               ))}
+    //             </tbody>
+    //           </table>
+    //         </div>
+    //       </div>
+    //     </section>
+    //   </div>
+    // </div>
+    <div className="min-h-screen bg-gray-50/50 pb-20">
+      {/* HEADER */}
+      <div className="bg-white border-b border-gray-200 pt-10 pb-6 mb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Admin <span className="text-indigo-600">Command Center</span></h1>
+          <p className="text-gray-500 mt-1 text-sm font-medium">Global management of the Herald Sphere ecosystem.</p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {error && <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-xl border border-red-100 text-sm font-bold">{error}</div>}
+
+        {/* STATS OVERVIEW */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Users</p>
+            <h2 className="text-4xl font-black text-gray-900 mt-2">{totalUsersCount}</h2>
+          </div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Global Posts</p>
+            <h2 className="text-4xl font-black text-indigo-600 mt-2">{totalPostsCount}</h2>
+          </div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Growth Status</p>
+            <h2 className="text-4xl font-black text-emerald-600 mt-2 font-mono">ACTIVE</h2>
+          </div>
+          {/* NEW: SUBSCRIBERS CARD */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 ring-2 ring-rose-50 border-rose-100">
+            <p className="text-xs font-bold text-rose-400 uppercase tracking-widest">Subscribers</p>
+            <h2 className="text-4xl font-black text-rose-600 mt-2">{totalSubscribers}</h2>
+          </div>
+        </div>
+
+        {/* USERS TABLE */}
+        <section className="mb-12">
+          <h3 className="text-xl font-bold text-gray-800 mb-4 ml-2">User Directory</h3>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">User</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Role</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {users.map(user => (
+                    <tr key={user._id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black text-[10px]">
+                            {user.username.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="font-bold text-gray-900">{user.username}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${
+                          user.role === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {user.role}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        {user.role !== 'admin' && (
+                          <button onClick={() => handleDeleteUser(user._id)} className="text-red-500 hover:text-red-700 font-black text-[10px] uppercase tracking-widest">Terminate</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <PaginationControls current={usersPage} total={totalUsersPages} onChange={setUsersPage} />
+          </div>
+        </section>
+
+        {/* POSTS TABLE */}
+        <section>
+          <h3 className="text-xl font-bold text-gray-800 mb-4 ml-2">Content Archives</h3>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Article</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Author</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {posts.map(post => (
+                    <tr key={post._id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <Link to={`/posts/${post._id}`} className="font-bold text-gray-900 hover:text-indigo-600 transition-colors line-clamp-1">{post.title}</Link>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-medium text-gray-500 uppercase tracking-tighter">{post.author?.username || 'Herald Staff'}</span>
+                      </td>
+                      <td className="px-6 py-4 text-right space-x-4 font-black text-[10px] uppercase tracking-widest">
+                        <Link to={`/edit-post/${post._id}`} className="text-indigo-600 hover:text-indigo-800">Edit</Link>
+                        <button onClick={() => handleDeletePost(post._id)} className="text-red-500 hover:text-red-700">Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <PaginationControls current={postsPage} total={totalPostsPages} onChange={setPostsPage} />
+          </div>
+        </section>
+      </div>
     </div>
   )
 }
