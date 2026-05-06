@@ -5,9 +5,25 @@ import { Link } from 'react-router-dom'
 
 function WriterDashboard() {
 const { user } = useContext(AuthContext);
-const profilePicUrl = user?.profilePic
-    ? (user.profilePic.startsWith('http') ? user.profilePic : `http://localhost:5014${user.profilePic}`)
-    : 'https://via.placeholder.com/150'; // Fallback if no picture exists
+
+const getProfilePic = () => {
+  if (!user || !user.profilePic) {
+    return 'https://via.placeholder.com/150';
+  }
+
+  if (user.profilePic.startsWith('http')) {
+    return user.profilePic;
+  }
+  const cleanPath = user.profilePic.replace(/^\//, '');
+  if (cleanPath.startsWith('uploads')) {
+    return `http://localhost:5014/${cleanPath}`;
+  }
+  return `http://localhost:5014/uploads/profile_pics/${cleanPath}`;
+};
+
+const profilePicUrl = getProfilePic();
+console.log("Current User Data:", user);
+
   return (
     <div className="min-h-screen bg-gray-50/50 pb-20">
         
@@ -20,6 +36,7 @@ const profilePicUrl = user?.profilePic
             <div className="absolute inset-0 bg-indigo-500 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
             <img 
               src={profilePicUrl} 
+              key={profilePicUrl}
               alt={user?.username} 
               className="relative w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white shadow-xl"
             />

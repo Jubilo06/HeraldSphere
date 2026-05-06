@@ -11,6 +11,8 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     profilePic: { type: String, default: "" }, // New: Store URL or path to the image
     role: { type: String, enum: ["writer", "admin"], default: "writer" },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
   },
   { timestamps: true },
 );

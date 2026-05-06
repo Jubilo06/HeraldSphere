@@ -86,7 +86,6 @@ function Home() {
     <div className='w-full pt-10'>
       <PublicPostList />
     </div>
-    <div><Footer /></div>
     </div>
   );
 }

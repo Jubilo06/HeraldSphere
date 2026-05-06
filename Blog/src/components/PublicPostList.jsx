@@ -53,7 +53,9 @@ function PublicPostList() {
     setSearchParams({ search: searchInput });
   };
 
-  if (loading) return <div>Loading posts...</div>;
+  if (loading) return <div className="flex justify-center items-center h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-indigo-600"></div></div>;
+  
   if (error) return <div>Error: {error}</div>;
   if (posts.length === 0) return 
 
@@ -69,20 +71,7 @@ function PublicPostList() {
         />
         <button type="submit" className="bg-blue-600 text-white p-2 rounded-lg">Search</button>
       </form>
-      {/* <h1 className='text-5xl font-extrabold ml-10 mb-10'>Explore Categories</h1>
-      <div className='flex flex-wrap flex-3 w-[90%] justify-self-center '>
-        {categories.map(cat => (
-                  <Link 
-                  key={cat} 
-                  to={`/posts/category/${cat}`}
-                  className=" grid mr-4 pr-3 gap-4 p-2 w-30 mb-10 bg-gray-200 rounded
-                   hover:bg-blue-500 border border-black
-                   hover:text-white whitespace-nowrap"
-                  >
-                  {cat}
-                  </Link>
-      ))}
-      </div> */}
+      
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
   {/* SECTION HEADER */}
   <div className="text-center mb-12">

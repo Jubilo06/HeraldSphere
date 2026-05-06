@@ -2,7 +2,7 @@ import React from 'react';
 import LegalLayout from '../components/LegalLayout';
 
 export const Terms = () => (
-  <LegalLayout title="Terms of Service" lastUpdated="1st May, 2026">
+  <LegalLayout title="Terms of Service" lastUpdated="May, 2026">
     <section>
       <h2>1. Acceptance of Terms</h2>
       <p>By accessing the Herald Sphere portal, you agree to be bound by these terms of service and all applicable laws.</p>

@@ -2,6 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import { 
+  FaHeart, FaRegHeart, FaTwitter, FaLinkedin, 
+  FaFacebook, FaLink, FaChevronLeft, FaReply 
+} from 'react-icons/fa';
 
 function PublicPostDetail() {
   const { id } = useParams();
@@ -9,6 +13,7 @@ function PublicPostDetail() {
   const [relatedPosts, setRelatedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [replyingTo, setReplyingTo] = useState(null); // Track which comment is being replied to
 
   
   useEffect(() => {
@@ -30,6 +35,23 @@ function PublicPostDetail() {
     } catch (err) { console.error(err); }
     setLoading(false);
   };
+
+
+  const organizeComments = (allComments) => {
+  const map = {};
+  allComments.forEach(c => map[c._id] = { ...c, replies: [] });
+  
+  const roots = [];
+  allComments.forEach(c => {
+    if (c.parentId) {
+      if (map[c.parentId]) map[c.parentId].replies.push(map[c._id]);
+    } else {
+      roots.push(map[c._id]);
+    }
+  });
+  return roots;
+};
+
 
    if (loading) return <div className="flex justify-center items-center h-screen">
     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-indigo-600"></div></div>;
@@ -66,7 +88,7 @@ function PublicPostDetail() {
         {post.mainImageUrl && (
           <img 
             src={post.mainImageUrl.startsWith('http') ? post.mainImageUrl : `http://localhost:5014${post.mainImageUrl}`} 
-            className="w-full h-[500px] object-cover rounded-3xl shadow-2xl shadow-slate-200" 
+            className="w-full h-125 object-cover rounded-3xl shadow-2xl shadow-slate-200" 
             alt={post.title} 
           />
         )}
@@ -75,7 +97,7 @@ function PublicPostDetail() {
        {/* MAIN CONTENT */}
       <article className="max-w-3xl mx-auto px-6">
         <div 
-          className="prose prose-lg prose-indigo max-w-none text-slate-700 leading-relaxed ql-editor" 
+          className="prose prose-lg prose-indigo  max-w-none text-slate-700 leading-relaxed ql-editor" 
           dangerouslySetInnerHTML={{ __html: post.content }} 
         />
 

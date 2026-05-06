@@ -1,6 +1,18 @@
 /* *{
   outline: 1px solid red !important;
 } */
+ html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure the App container also allows flex growth */
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
  .quill-editor .ql-toolbar {
   position: -webkit-sticky;
   position: sticky;
@@ -19,4 +31,62 @@
 .ql-container.ql-snow {
   min-height: 400px;
   font-size: 1.1rem;
+}
+
+/* Tooltip-like effect using pure CSS (Alternative to browser title) */
+.ql-toolbar button:hover::after {
+  content: attr(title);
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b; /* slate-800 */
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  white-space: nowrap;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* Ensure the toolbar doesn't clip the tooltips */
+.ql-toolbar {
+  overflow: visible !important;
+  position: relative;
+}
+
+/* Change the 'Normal' text in the dropdown to 'Paragraph' */
+.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="false"]::before,
+.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="false"]::before {
+  content: 'Paragraph' !important;
+}
+
+/* Make the dropdown label more readable */
+.ql-snow .ql-picker.ql-header .ql-picker-label::before {
+  font-weight: bold;
+  color: #475569; /* slate-600 */
+}
+
+.ql-snow .ql-toolbar .ql-align {
+  margin-right: 4px;
+}
+
+/* Fix for the SVG icons inside the buttons */
+.ql-snow .ql-toolbar button svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* Optional: Make the active alignment tool blue */
+.ql-snow .ql-toolbar button.ql-active svg .ql-stroke {
+  stroke: #4f46e5 !important; /* indigo-600 */
+}
+
+/* Group alignment buttons together visually */
+.ql-snow.ql-toolbar span.ql-formats:nth-child(4) {
+  background: #f8fafc; /* light slate */
+  border-radius: 6px;
+  padding: 0 4px;
 }

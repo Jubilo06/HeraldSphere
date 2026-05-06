@@ -1,5 +1,6 @@
 import { useState, useContext } from 'react'
 import Home from './components/Home'
+import PublicPostDetails from './components/PublicPostDetails'
 import PublicPostList from './components/PublicPostList'
 import PublicPostDetail from './components/PublicPostDetail'
 import NotFoundPage from './components/NotFoundPage'
@@ -8,6 +9,8 @@ import Register from './components/Register'
 import PostForm from './components/PostForm'
 import PostList from './components/PostList'
 import Login from './components/Login'
+import ForgotPassword from './components/ForgotPassword'
+import ResetPassword from './components/ResetPassword'
 import EditProfile from './components/EditProfile'
 import WriterDashboard from './components/WriterDashboard'
 import WriterPostForm from './components/WriterPostForm'
@@ -39,21 +42,25 @@ function App() {
   return (
     <Router>
       <AuthProvider> {/* Wrap your entire app with AuthProvider */}
-        <Navigation /> {/* Global navigation */}
-        <div className="App" style={{ padding: '20px' }}>
-          <Routes>
+        <div className="flex flex-col min-h-screen bg-white">
+          <Navigation /> {/* Global navigation */}
+          {/* MAIN CONTENT AREA */}
+          <main className="grow w-full">
+            <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/posts" element={<PublicPostList />} />
-            <Route path="/posts/:id" element={<PublicPostDetail />} /> {/* Route for single public post */}
+            <Route path="/posts/:id" element={<PublicPostDetails />} /> {/* Route for single public post */}
             <Route path="/posts/category/:categoryName" element={<PublicPostList />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/cookies" element={<Cookies />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             
             {/* Protected Admin Routes */}
             <Route element={<ProtectedRoute  />}>
@@ -80,6 +87,7 @@ function App() {
             {/* Catch-all for 404 Not Found */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
+          </main>
         </div>
       </AuthProvider>
     </Router>

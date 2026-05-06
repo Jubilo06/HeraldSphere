@@ -2,10 +2,10 @@ import React from 'react'
 
 function About() {
      const founder = {
-    name: "Temmy Abbey",
+    name: "Amusan Temiloluwa",
     role: "Editor-in-Chief & Founder",
-    image: "/Blog/public/hero1.webp", // Replace with your actual profile picture path
-    bio: "A visionary digital journalist dedicated to uncovering the stories that shape our global landscape. With a background in technology and culture, Temmy founded Herald Sphere to bridge the gap between complex global events and the digital audience."
+    image: "hero1.webp", // Replace with your actual profile picture path
+    bio: "A visionary digital developer dedicated to uncovering the stories that shape our global landscape. With a background in technology and culture, Temmy founded Herald Sphere to bridge the gap between complex global events and the digital audience."
   };
   return (
     <div className="bg-white min-h-screen">
@@ -29,7 +29,7 @@ function About() {
           <div>
             <h3 className="text-3xl font-black text-slate-900 mb-6">Integrity in every <span className="text-indigo-600">byte.</span></h3>
             <p className="text-slate-600 mb-6 leading-relaxed">
-              Founded in 2024, Herald Sphere emerged from a simple realization: in an era of noise, clarity is the ultimate luxury. We cut through the static to deliver curated insights across Science, Technology, and Business.
+              Founded in 2026, Herald Sphere emerged from a simple realization: in an era of noise, clarity is the ultimate luxury. We cut through the static to deliver curated insights across Science, Technology, and Business.
             </p>
             <div className="space-y-4">
               {['Global Perspectives', 'Unbiased Reporting', 'Deep Analysis'].map((item) => (
@@ -42,7 +42,7 @@ function About() {
               ))}
             </div>
           </div>
-          <div className="bg-slate-100 rounded-3xl h-[400px] flex items-center justify-center border border-slate-200 shadow-inner">
+          <div className="bg-slate-100 rounded-3xl h-100 flex items-center justify-center border border-slate-200 shadow-inner">
              {/* Large Icon or Brand Graphic */}
              <span className="text-8xl font-black text-slate-200 select-none">HERALD</span>
           </div>

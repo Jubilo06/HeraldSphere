@@ -1,16 +1,21 @@
 // src/pages/Login.js
 import React, { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from './AuthContext';
+import { FaEye, FaEyeSlash, FaCheckCircle } from 'react-icons/fa'; // Added icons
 
 function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext); // Get the login function from AuthContext
   const navigate = useNavigate();
+  const location = useLocation();
+
+   const successMsg = location.state?.message;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,8 +27,8 @@ function Login() {
         withCredentials: true // <--- IMPORTANT: Ensure this is set for your login request if your backend relies on cookies.
       }
       );
-      const {  _id, username: loggedInUsername, role, token } = response.data;
-      login({ _id, username: loggedInUsername, role }, token); // Call the login function from AuthContext
+      const {  _id, username: loggedInUsername, role, token, profilePic, firstName, lastName, email } = response.data;
+      login({ _id, username: loggedInUsername, role,profilePic, firstName, lastName, email }, token); // Call the login function from AuthContext
       // Redirect handled by AuthContext
     } catch (err) {
        console.error("Login component: Error caught during login:", err);
@@ -46,7 +51,13 @@ function Login() {
         <div className="absolute inset-0 bg-linear-to-r from-indigo-500 to-purple-600 rounded-3xl blur opacity-20"></div>
         
         <div className="relative bg-white/10 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl p-8 md:p-10">
-          
+           {/* SUCCESS MESSAGE FROM REGISTRATION */}
+          {successMsg && !error && (
+            <div className="mb-6 p-4 bg-emerald-500/20 border border-emerald-500/50 rounded-xl flex items-center gap-3 text-emerald-400 animate-in fade-in zoom-in duration-300">
+              <FaCheckCircle className="shrink-0" />
+              <p className="text-xs font-bold uppercase tracking-tight">{successMsg}</p>
+            </div>
+          )}
           {/* HEADER */}
           <div className="text-center mb-10">
             <h2 className="text-xs font-bold text-indigo-400 uppercase tracking-[0.4em] mb-3">
@@ -79,27 +90,28 @@ function Login() {
               />
             </div>
 
-            {/* PASSWORD */}
             <div className="space-y-2">
-              <div className="flex justify-between items-center ml-1">
-                <label className="text-xs font-bold text-gray-300 uppercase tracking-widest">
-                  Password
-                </label>
-                <a href="#" className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 uppercase tracking-tighter transition">
-                  Forgot?
-                </a>
+              <label className="text-xs font-bold text-gray-300 uppercase tracking-widest ml-1">Password</label>
+               <Link to="/forgot-password" size={18} className="text-[10px] ml-4 font-bold text-indigo-400 hover:text-indigo-300 uppercase tracking-tighter transition">
+                Forgot?
+              </Link>
+              <div className="relative">
+                <input 
+                  type={showPassword ? "text" : "password"} // Dynamic type
+                  value={password} onChange={(e) => setPassword(e.target.value)} required 
+                  placeholder="••••••••"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3 text-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                />
+                {/* EYE ICON */}
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                >
+                  {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                </button>
               </div>
-              <input 
-                type="password" 
-                id='login-password' 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                required 
-                placeholder="••••••••"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all"
-              />
             </div>
-
             {/* ERROR MESSAGE */}
             {error && (
               <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs py-3 px-4 rounded-lg flex items-center space-x-2 animate-shake">

@@ -1,7 +1,6 @@
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import User from "../models/User.mjs";
-// import { comparePassword } from "../utils/helper.mjs";
 
 export default function (passport) {
   console.log("Passport Config: Initializing Passport strategies..."); // This should still appear on server start
@@ -65,6 +64,9 @@ export default function (passport) {
             _id: user._id,
             username: user.username,
             role: user.role,
+            profilePic: user.profilePic, 
+            firstName: user.firstName, 
+            lastName: user.lastName, 
           });
         } else {
           console.log(

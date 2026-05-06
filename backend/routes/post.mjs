@@ -19,6 +19,20 @@ router.get('/:id', postController.getPostById);
 // CREATE a new post
 router.post("/", authenticateJWT, postController.createPost);
 
+
+// Existing routes...
+router.get('/:id', postController.getPostById);
+
+// --- NEW INTERACTION ROUTES ---
+// LIKE: PUT /api/posts/:id/like
+router.put('/:id/like', postController.handleLike);
+
+// COMMENTS: GET /api/posts/:id/comments
+router.get('/:id/comments', postController.getComments);
+
+// POST COMMENT: POST /api/posts/:id/comments
+router.post('/:id/comments', postController.createComment);
+
 // UPDATE a post by ID
 router.put(
   "/:id",

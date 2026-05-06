@@ -2,7 +2,8 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { AuthContext } from './AuthContext'; // If you want to auto-login after register
+import { AuthContext } from './AuthContext'; 
+import { FaEye, FaEyeSlash, FaCheckCircle } from 'react-icons/fa';
 
 function Register() {
   const [formData, setFormData] = useState({  
@@ -14,6 +15,7 @@ function Register() {
   });
   const [profilePic, setProfilePic] = useState(null);
   const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -26,13 +28,10 @@ function Register() {
     }));
   };
 
-  //   const handleFileChange = (e) => {
-  //     console.log("File selected in frontend:", e.target.files[0]);
-  //   setProfilePic(e.target.files[0]); // Get the first file selected
-  // };
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
       setProfilePic(file);
       setPreviewUrl(URL.createObjectURL(file)); // Generate preview URL
     }
@@ -44,9 +43,6 @@ function Register() {
     setLoading(true);
     setError(null);
     try {
-      // Assuming your backend /api/auth/register endpoint
-      // const response = await axios.post('http://localhost:5014/api/auth/register', { username, password, role: 'user' });
-      
       const dataToSend = new FormData();
       for (const key in formData) {
         dataToSend.append(key, formData[key]);
@@ -60,21 +56,15 @@ function Register() {
           'Content-Type': 'multipart/form-data',
         },
       })
-     
-    if (response.status === 201) {
-        console.log("Registration successful! Response data:", response.data);
-        // Your AuthContext's registerUser should handle calling login if it returns token/user
-        // If AuthContext handles login:
-        if (response.data.token && response.data.user) {
-            // login(response.data.user, response.data.token); // AuthContext.registerUser should have done this
-            navigate('/'); // Navigate home or dashboard
-        } else {
-            // If AuthContext doesn't auto-login, you might do it here or navigate to login
-            navigate('/login'); 
-        }
+       const data = response?.data || response;
+
+      console.log("Registration attempt finished. Data received:", data);
+    if (response?.data?.token || response?.token) {
+        // Auto-logged in
+        navigate('/'); 
       } else {
-        // This case theoretically shouldn't happen with a 201 status, but as a safeguard
-        setError(response.data?.message || 'Unexpected registration response status.');
+        // Needs manual login
+        navigate('/login', { state: { message: "Account created! Please log in." } });
       }
     } catch (err) {
       // setError(err.response?.data?.message || 'Registration failed');
@@ -157,9 +147,22 @@ function Register() {
                 <input name="username" value={formData.username} onChange={handleChange} required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Password</label>
-                <input type="password" name="password" value={formData.password} onChange={handleChange} required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" />
-              </div>
+  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Password</label>
+  <div className="relative">
+    <input 
+      type={showPassword ? "text" : "password"} 
+      name="password" value={formData.password} onChange={handleChange} required 
+      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" 
+    />
+    <button 
+      type="button" 
+      onClick={() => setShowPassword(!showPassword)} 
+      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+    >
+      {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+    </button>
+  </div>
+</div>
             </div>
 
             {error && (

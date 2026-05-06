@@ -54,14 +54,14 @@ function Contact() {
             <h3 className="text-2xl font-bold text-slate-900 mb-6">Communication Channels</h3>
             <div className="space-y-6">
               <div className="flex items-start gap-5">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 flex-shrink-0 font-bold">@</div>
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0 font-bold">@</div>
                 <div>
                   <p className="font-bold text-slate-900">General Inquiries</p>
                   <p className="text-slate-500 text-sm">hello@heraldsphere.com</p>
                 </div>
               </div>
               <div className="flex items-start gap-5">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 flex-shrink-0 font-bold">#</div>
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0 font-bold">#</div>
                 <div>
                   <p className="font-bold text-slate-900">Editorial Department</p>
                   <p className="text-slate-500 text-sm">editor@heraldsphere.com</p>

@@ -2,7 +2,7 @@ import React from 'react';
 import LegalLayout from '../components/LegalLayout';
 
 export const Cookies = () => (
-  <LegalLayout title="Cookie Policy" lastUpdated="May 15, 2024">
+  <LegalLayout title="Cookie Policy" lastUpdated="May, 2026">
     <section>
       <h2>What are cookies?</h2>
       <p>Cookies are small text files used to store small pieces of information. They are stored on your device when the website is loaded on your browser.</p>

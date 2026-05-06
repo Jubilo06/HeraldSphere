@@ -19,12 +19,16 @@ const postSchema = new Schema({
   },
   category: {
     type: String,
-    trim:true,
+    trim: true,
     required: true,
   },
   mainImageUrl: {
     type: String, // Store the URL of the uploaded image
     default: null, // It's optional, so can be null if no main image is provided
+  },
+  likes: {
+    type: Number,
+    default: 0,
   },
   createdAt: {
     type: Date,

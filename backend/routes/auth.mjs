@@ -9,6 +9,8 @@ import userController from "../controllers/userController.mjs";
 import authorizeRole from "../middlewares/authorizeRole.mjs";
 import User from '../models/User.mjs'
 import Post from "../models/Post.mjs";
+import { forgotPassword } from "../controllers/authController.mjs";
+import { resetPassword } from "../controllers/authController.mjs";
 
 const createAuthRouter = (uploadProfilePic) => {
   const router = express.Router();
@@ -16,6 +18,10 @@ const createAuthRouter = (uploadProfilePic) => {
       // router.post("/register", register);
     router.post("/register", uploadProfilePic.single("profilePic"), register);
     router.post("/login", login);
+
+    router.post("/forgot-password", forgotPassword);
+    router.post("/reset-password", resetPassword);
+
 
     // --- Admin User Management Routes ---
     router.get('/admin/users', authenticateJWT, authorizeRole('admin'), userController.getAllUsers);

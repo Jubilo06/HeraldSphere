@@ -2,7 +2,7 @@ import React from 'react';
 import LegalLayout from '../components/LegalLayout';
 
 export const Privacy = () => (
-  <LegalLayout title="Privacy Policy" lastUpdated="May 15, 2024">
+  <LegalLayout title="Privacy Policy" lastUpdated="May, 2026">
     <section>
       <h2>1. Introduction</h2>
       <p>Welcome to Herald Sphere. We respect your privacy and are committed to protecting your personal data.</p>

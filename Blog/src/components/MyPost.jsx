@@ -43,7 +43,8 @@ function MyPost() {
     }
   };
 
-    if (loading) return <div>Loading your posts...</div>;
+    if (loading) return <div className="flex justify-center items-center h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-indigo-600"></div></div>;
     if (error) return <div style={{ color: 'red' }}>Error: {error}</div>;
     if (posts.length === 0) return <div>You haven't created any posts yet. <Link to="/submit-post">Start writing!</Link></div>;
   return (

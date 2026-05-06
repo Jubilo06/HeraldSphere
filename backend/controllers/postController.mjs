@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import Subscriber from "../models/Subscriber.mjs";
 import SibApiV3Sdk from "sib-api-v3-sdk";
+import Comment from "../models/Comment.mjs";
 
 
 
@@ -170,7 +171,7 @@ export const createPost=async (req, res) => {
     await newPost.save();
 
     // RUN THIS AFTER SUCCESS
-    notifySubscribers(savedPost);
+    notifySubscribers(newPost);
 
     res.status(201).json(newPost);
   } catch (error) {
@@ -347,6 +348,59 @@ export const getSubscriberCount = async (req, res) => {
   }
 };
 
+// 1. Handle Likes (Increment/Decrement)
+export const handleLike = async (req, res) => {
+  const { id } = req.params;
+  const { action } = req.body; // 'like' or 'unlike'
+
+  try {
+    const amount = action === 'like' ? 1 : -1;
+    const updatedPost = await Post.findByIdAndUpdate(
+      id,
+      { $inc: { likes: amount } }, // MongoDB atomic increment
+      { new: true }
+    );
+    res.json({ likes: updatedPost.likes });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating likes" });
+  }
+};
+
+// 2. Get All Comments for a Post
+export const getComments = async (req, res) => {
+  try {
+    const comments = await Comment.find({ postId: req.params.id }).sort({ createdAt: -1 });
+    res.json(comments);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching comments" });
+  }
+};
+
+// 3. Create a New Comment
+export const createComment = async (req, res) => {
+  const { name, email, website, comment, parentId } = req.body;
+  const { id } = req.params;
+
+  if (!name || !email || !comment) {
+    return res.status(400).json({ message: "Required fields missing." });
+  }
+
+  try {
+    const newComment = new Comment({
+      postId: id,
+      parentId: parentId || null,
+      name,
+      email,
+      website,
+      comment,
+    });
+    await newComment.save();
+    res.status(201).json(newComment);
+  } catch (error) {
+    res.status(500).json({ message: "Error posting comment" });
+  }
+};
+
 const postController = {
   getAllPosts,
   getPostById,
@@ -356,7 +410,10 @@ const postController = {
   deletePost,
   getAdminPost,
   handleContactForm,
-  getSubscriberCount
+  getSubscriberCount,
+  handleLike,
+  getComments,
+  createComment
 };
 
 export default postController;
