@@ -1,13 +1,10 @@
 import { useState, useContext } from 'react'
 import Home from './components/Home'
-import PublicPostDetails from './components/PublicPostDetails'
 import PublicPostList from './components/PublicPostList'
 import PublicPostDetail from './components/PublicPostDetail'
 import NotFoundPage from './components/NotFoundPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import Register from './components/Register'
-import PostForm from './components/PostForm'
-import PostList from './components/PostList'
 import Login from './components/Login'
 import ForgotPassword from './components/ForgotPassword'
 import ResetPassword from './components/ResetPassword'
@@ -42,17 +39,17 @@ function App() {
   return (
     <Router>
       <AuthProvider> {/* Wrap your entire app with AuthProvider */}
-        <div className="flex flex-col min-h-screen bg-white">
+        <div className="flex w-full flex-col min-h-screen bg-white absolute">
           <Navigation /> {/* Global navigation */}
           {/* MAIN CONTENT AREA */}
-          <main className="grow w-full">
+          <main className="grow w-full ">
             <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/posts" element={<PublicPostList />} />
-            <Route path="/posts/:id" element={<PublicPostDetails />} /> {/* Route for single public post */}
+            <Route path="/posts/:id" element={<PublicPostDetail />} /> {/* Route for single public post */}
             <Route path="/posts/category/:categoryName" element={<PublicPostList />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
@@ -88,6 +85,9 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
           </main>
+          <div className='mb-0 w-full'>
+            <Footer />
+          </div>
         </div>
       </AuthProvider>
     </Router>

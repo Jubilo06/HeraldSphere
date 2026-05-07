@@ -61,7 +61,7 @@ function PublicPostList() {
 
   return (
     <div className='w-full'>
-      <form onSubmit={handleSearch} className="mb-8 flex gap-2 w-[90%] justify-self-center">
+      <form onSubmit={handleSearch} className="mb-8 flex gap-2 w-[90%] justify-self-center mt-10">
         <input 
           type="text" 
           placeholder="Search by title or category..." 
@@ -69,7 +69,7 @@ function PublicPostList() {
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
         />
-        <button type="submit" className="bg-blue-600 text-white p-2 rounded-lg">Search</button>
+        <button type="submit" className="bg-indigo-600 text-white p-2 rounded-lg">Search</button>
       </form>
       
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
