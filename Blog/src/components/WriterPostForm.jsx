@@ -36,6 +36,7 @@ const [mainImageFile, setMainImageFile] = useState(null); // For the actual file
   'ql-indent': { '-1': 'Decrease Indent', '+1': 'Increase Indent' },
   'ql-link': 'Insert Link',
   'ql-image': 'Insert Image',
+  'ql-video': 'Insert Video (YouTube/Vimeo URL)',
   'ql-header': { '1': 'Heading 1', '2': 'Heading 2', 'false': 'Paragraph (Normal)' },
   'ql-clean': 'Remove Formatting',
   'ql-align': { 
@@ -54,13 +55,6 @@ useEffect(() => {
     const buttons = toolbar.querySelectorAll('button');
     buttons.forEach(btn => {
       const className = Array.from(btn.classList).find(c => TOOLBAR_LABELS[c]);
-      // if (className) {
-      //   const value = btn.value;
-      //   const label = typeof TOOLBAR_LABELS[className] === 'object' 
-      //                 ? TOOLBAR_LABELS[className][value || 'false'] 
-      //                 : TOOLBAR_LABELS[className];
-      //   if (label) btn.setAttribute('title', label);
-      // }
        if (className) {
         let value = btn.value;
 
@@ -131,64 +125,7 @@ useEffect(() => {
     }
   }, [title, content, category, customCategory, isEditMode]);
 
-  // --- Initial Fetch for Edit Mode ---
-  // useEffect(() => {
-  //   if (!isLoading && !isAuthenticated) {
-  //       // This is a fallback; ProtectedRoute should handle this
-  //       navigate('/login');
-  //       return;
-  //   }
-
-  //   if (isEditMode && !isLoading && isAuthenticated && user) {
-  //     setIsEditing(true);
-  //     setLoading(true);
-  //     setError(null);
-  //     api.get(`/api/posts/${id}`) // Use your 'api' instance
-  //       .then(response => {
-  //         const post = response.data;
-
-  //         // --- Role-Aware Permission Check for Editing ---
-  //         if (user.role === 'user' && post.author !== user._id) {
-  //           setError("You are not authorized to edit this post.");
-  //           navigate('/my-posts'); // Redirect non-authors to their posts
-  //           return;
-  //         }
-  //         // --- END Permission Check ---
-  //          if (categories.includes(post.category)) {
-  //             setCategory(post.category);
-  //           } else {
-  //             setCategory('Other');
-  //             setCustomCategory(post.category);
-  //           }
-  //         setTitle(post.title);
-  //         setContent(post.content);
-  //         setCategory(post.category || '');
-  //         setMainImageUrl(post.mainImageUrl || '');
-  //         // If you had a 'mainImage' for the post separate from Quill content, set it here
-  //       })
-  //       .catch(err => {
-  //         console.error("Error fetching post:", err);
-  //         setError(err.response?.data?.message || 'Failed to fetch post.');
-  //         // Redirect if post not found or forbidden
-  //         if (err.response?.status === 404) {
-  //           navigate(user.role === 'admin' ? '/admin/posts' : '/my-posts'); // Redirect based on role
-  //         } else if (err.response?.status === 403) {
-  //           setError("You don't have permission to view/edit this post.");
-  //           navigate(user.role === 'admin' ? '/admin/posts' : '/my-posts');
-  //         }
-  //       })
-  //       .finally(() => {
-  //         setLoading(false);
-  //       });
-  //   } else if (!isEditMode) {
-  //     // Reset for creation mode
-  //     setIsEditing(false);
-  //     setTitle('');
-  //     setContent('');
-  //     setCategory('');
-  //     setError(null); // Clear previous errors
-  //   }
-  // }, [id, isEditMode, navigate, user, isAuthenticated, isLoading]);
+  
 
   // --- Initial Fetch for Edit Mode ---
   useEffect(() => {
@@ -241,7 +178,7 @@ useEffect(() => {
            { 'indent': '-1' }, { 'indent': '+1' }],
            [{ 'align': '' },
            { 'align': 'center' }, { 'align': 'right' }, { 'align': 'justify' }],
-        ['link', 'image'],
+        ['link', 'image', 'video'],
         ['clean']
       ],
       handlers: {

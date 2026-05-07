@@ -9,7 +9,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 function Footer() {
-    const categories = ['Science', 'Business', 'Technology', 'Health', 'Sports', 'Opinion'];
+    const categories = ['Science', 'Business', 'Technology', 'Health', 'Sports', 'Opinion', "Other"];
     const [email, setEmail] = useState("");
     const [status, setStatus] = useState({ type: '', msg: '' }); // 'loading', 'success', 'error'
     const [loading, setLoading] = useState(false);

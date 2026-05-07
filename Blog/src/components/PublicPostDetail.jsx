@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import api from './Api';
 import Footer from './Footer';
 import { FaHeart, FaRegHeart, FaTwitter, FaLinkedin, FaChevronLeft, FaReply } from 'react-icons/fa';
+import DOMPurify from 'dompurify';
 
 function PublicPostDetail() {
   const { id } = useParams();
@@ -31,6 +32,21 @@ function PublicPostDetail() {
     } catch (err) { console.error(err); }
     setLoading(false);
   };
+
+  const CleanContent = () => {
+  const sanitizedHTML = DOMPurify.sanitize(post.content, {
+    ADD_TAGS: ["iframe"], // Allow videos
+    ADD_ATTR: ["allow", "allowfullscreen", "frameborder", "scrolling"], // Allow video features
+  });
+
+  return (
+    <div 
+      className="ql-editor prose max-w-none" 
+      dangerouslySetInnerHTML={{ __html: sanitizedHTML }} 
+    />
+  );
+};
+
 
   if (loading) return <div className="h-screen flex items-center justify-center bg-white"><div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div></div>;
 
@@ -94,14 +110,14 @@ function PublicPostDetail() {
 
             {/* QUICK FORM */}
             <div className="bg-slate-950 p-5 rounded-2xl text-white">
-              <p className="text-[10px] font-black uppercase tracking-widest mb-4">Post Dispatch</p>
+              <p className="text-[10px] font-black uppercase tracking-widest mb-4">Comment</p>
               <form className="space-y-3">
                 <textarea className="w-full bg-white/10 rounded-xl p-3 text-xs outline-none focus:ring-1 focus:ring-indigo-500" rows="3" placeholder="Your perspective..." />
                 <div className="grid grid-cols-2 gap-3">
                   <input placeholder="Name" className="bg-white/5 border border-white/10 rounded-lg p-2 text-[10px] outline-none" />
                   <input placeholder="Email" className="bg-white/5 border border-white/10 rounded-lg p-2 text-[10px] outline-none" />
                 </div>
-                <button className="w-full bg-indigo-600 py-2 rounded-full font-black text-[10px] uppercase tracking-widest">Transmit</button>
+                <button className="w-full bg-indigo-600 py-2 rounded-full font-black text-[10px] uppercase tracking-widest">Post comment</button>
               </form>
             </div>
           </section>
@@ -112,7 +128,18 @@ function PublicPostDetail() {
           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
             <p className="text-[8px] font-black uppercase text-indigo-600 mb-3 underline underline-offset-4">The Contributor</p>
             <div className="flex items-center gap-3">
-              <img src={post.author?.profilePic || '/logo.webp'} className="w-12 h-12 rounded-xl object-cover border-2 border-white shadow-sm" alt="" />
+              {/* <img src={post.author?.profilePic || '/logo.webp'} className="w-12 h-12 rounded-xl object-cover border-2 border-white shadow-sm" alt="" /> */}
+              <img 
+                  src={
+                    post.author?.profilePic 
+                      ? (post.author.profilePic.startsWith('http') 
+                          ? post.author.profilePic 
+                          : `http://localhost:5014/${post.author.profilePic.replace(/^\//, '')}`)
+                      : '/logo.webp'
+                  } 
+                  className="w-12 h-12 rounded-xl object-cover border-2 border-white shadow-sm" 
+                  alt={post.author?.username || 'Author'} 
+                />
               <div className="min-w-0">
                 <h4 className="font-black text-xs text-slate-900 uppercase truncate">{post.author?.firstName} {post.author?.lastName}</h4>
                 <p className="text-[9px] text-slate-500 font-bold uppercase">Herald Staff</p>
@@ -134,9 +161,7 @@ function PublicPostDetail() {
         </aside>
 
       </div>
-      {/* <div className='mt-10 mb-0 absolute '>
-        <Footer />
-      </div> */}
+      
     </div>
   );
 }

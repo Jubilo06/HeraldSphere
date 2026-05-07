@@ -90,3 +90,18 @@
   border-radius: 6px;
   padding: 0 4px;
 }
+
+.ql-video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 1rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Ensure videos show up in the editor and the public view */
+.ql-editor .ql-video {
+  display: block;
+  max-width: 100%;
+}
