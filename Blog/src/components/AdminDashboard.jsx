@@ -78,6 +78,15 @@ function AdminDashboard() {
       } catch (err) { setError(err.response?.data?.message); }
     }
   };
+  const runMigration = async () => {
+  try {
+    const res = await api.get('/api/posts/admin/migrate-slugs');
+    alert(res.data.message);
+  } catch (err) {
+    alert("Migration failed: " + err.message);
+  }
+};
+
    // Reusable Pagination Component
   const PaginationControls = ({ current, total, onChange }) => (
     <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-gray-100">
@@ -220,6 +229,9 @@ function AdminDashboard() {
                 </tbody>
               </table>
             </div>
+            <button onClick={runMigration} className="bg-orange-500 text-white p-2 rounded">
+  Fix Missing Slugs
+</button>
             <PaginationControls current={postsPage} total={totalPostsPages} onChange={setPostsPage} />
           </div>
         </section>

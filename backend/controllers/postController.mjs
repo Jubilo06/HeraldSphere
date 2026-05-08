@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import Subscriber from "../models/Subscriber.mjs";
 import SibApiV3Sdk from "sib-api-v3-sdk";
 import Comment from "../models/Comment.mjs";
+import slugify from "slugify";
 
 
 
@@ -85,8 +86,7 @@ export const getAllPosts=async (req, res) => {
     if (category && category !== "null" && category !== "undefined") {
       filter.category = category;
     }
-    // const posts = await Post.find().populate('author', 'username').sort({ createdAt: -1 });
-    // res.json(posts);
+
     console.log("Backend Filter applied:", filter);
      if (search) {
        filter.$or = [
@@ -120,8 +120,6 @@ export const getAllPosts=async (req, res) => {
        totalPosts,
      });
   } catch (error) {
-    // console.error('Error fetching all posts:', error);
-    // res.status(500).json({ message: 'Server error fetching posts.' });
     console.error("Error fetching paginated posts:", error); // More specific error log
     res.status(500).json({ message: error.message });
   }
@@ -129,9 +127,14 @@ export const getAllPosts=async (req, res) => {
 
 
 // Get a single post by ID
-export const getPostById =async (req, res) => {
+export const getPostBySlug =async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).populate('author', 'username firstName lastName profilePic');
+    const { slug } = req.params;
+
+    if (!slug || slug === "undefined") {
+      return res.status(400).json({ message: "No slug provided" });
+    }
+    const post = await Post.findOne({slug: slug}).populate('author', 'username firstName lastName profilePic');
     if (!post) {
       return res.status(404).json({ message: 'Post not found.' });
     }
@@ -139,7 +142,7 @@ export const getPostById =async (req, res) => {
   } catch (error) {
     console.error('Error fetching single post:', error);
     if (error.kind === 'ObjectId') {
-      return res.status(400).json({ message: 'Invalid Post ID format.' });
+      return res.status(400).json({ message: 'Invalid Post Slug format.' });
     }
     res.status(500).json({ message: 'Server error fetching post.' });
   }
@@ -243,15 +246,17 @@ export const deletePost=async (req, res) => {
 // --- ADMIN-SPECIFIC ROUTES (Requires 'admin' role) ---
 
 export const getAdminPost=async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
-
-  const totalPosts = await Post.countDocuments();
-  const post = await Post.find().skip(skip).limit(limit);  
   try {
-      
-        const posts = await Post.find().populate('author', 'username').sort({ createdAt: -1 });
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const totalPosts = await Post.countDocuments();
+        const posts = await Post.find()
+          .populate("author", "username")
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit);;
         // res.json(posts);
         res.json({
           posts,
@@ -369,6 +374,12 @@ export const handleLike = async (req, res) => {
 // 2. Get All Comments for a Post
 export const getComments = async (req, res) => {
   try {
+    const { id } = req.params;
+
+    // If frontend sends "undefined" as a string, return empty instead of crashing
+    if (!id || id === "undefined" || id.length < 24) {
+      return res.json([]);
+    }
     const comments = await Comment.find({ postId: req.params.id }).sort({ createdAt: -1 });
     res.json(comments);
   } catch (error) {
@@ -401,9 +412,88 @@ export const createComment = async (req, res) => {
   }
 };
 
+export const getSitemap = async (req, res) => {
+  try {
+    const posts = await Post.find({}).select("slug updatedAt");
+    const baseUrl = "https://heraldsphere.com"; // Change to your live domain later
+
+    // Start the XML string
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>`;
+    xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
+
+    // Add Static Pages
+    const staticPages = ["/", "/posts", "/about", "/contact"];
+    staticPages.forEach((page) => {
+      xml += `<url><loc>${baseUrl}${page}</loc><changefreq>daily</changefreq></url>`;
+    });
+
+    // Add Dynamic Blog Posts
+    posts.forEach((post) => {
+      xml += `
+        <url>
+          <loc>${baseUrl}/posts/${post.slug}</loc>
+          <lastmod>${post.updatedAt.toISOString()}</lastmod>
+          <changefreq>weekly</changefreq>
+        </url>`;
+    });
+
+    xml += `</urlset>`;
+
+    // Set header to XML so the browser/Google reads it correctly
+    res.header("Content-Type", "application/xml");
+    res.send(xml);
+  } catch (error) {
+    res.status(500).end();
+  }
+};
+
+export const migrateSlugs = async (req, res) => {
+  console.log("Migration started...");
+  try {
+    // 1. Find all posts missing a slug
+    const posts = await Post.find({
+      $or: [{ slug: { $exists: false } }, { slug: "" }, { slug: null }],
+    });
+
+    console.log(`Found ${posts.length} posts to update.`);
+
+    let updatedCount = 0;
+    let errorCount = 0;
+
+    for (let post of posts) {
+      try {
+        // Create a base slug
+        let newSlug = slugify(post.title || "untitled", {
+          lower: true,
+          strict: true,
+        });
+
+        // Add a small random string to ensure uniqueness (prevents 500 crash on duplicate titles)
+        const randomID = Math.random().toString(36).substring(7);
+        post.slug = `${newSlug}-${randomID}`;
+
+        await post.save();
+        updatedCount++;
+      } catch (err) {
+        console.error(`Failed to update post ${post._id}:`, err.message);
+        errorCount++;
+      }
+    }
+
+    res.json({
+      message: "Migration completed",
+      successCount: updatedCount,
+      failCount: errorCount,
+    });
+  } catch (error) {
+    console.error("Critical Migration Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 const postController = {
   getAllPosts,
-  getPostById,
+  getPostBySlug,
   createPost,
   updatePost,
   getPostByUser,
@@ -413,7 +503,10 @@ const postController = {
   getSubscriberCount,
   handleLike,
   getComments,
-  createComment
+  createComment,
+  getSitemap,
+  migrateSlugs
+
 };
 
 export default postController;

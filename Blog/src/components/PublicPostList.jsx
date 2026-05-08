@@ -143,7 +143,7 @@ function PublicPostList() {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {posts.map((post) => (
         <Link 
-          to={`/posts/${post._id}`} 
+          to={`/posts/${post.slug}`} 
           key={post._id} 
           className="group relative flex flex-col md:flex-row bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
         >

@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /writer/
+
+Sitemap: https://heraldsphere.com/sitemap.xml

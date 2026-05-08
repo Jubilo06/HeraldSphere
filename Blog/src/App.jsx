@@ -23,6 +23,7 @@ import Contact from './components/Contact'
 import { Terms } from './components/Terms'
 import { Privacy } from './components/Privacy'
 import { Cookies } from './components/Cookies'
+import { HelmetProvider } from 'react-helmet-async';
 
 function Navigation() {
   const { isAuthenticated, isAdmin, logout, user, register, login } = useContext(AuthContext);
@@ -37,7 +38,8 @@ function Navigation() {
 
 function App() {
   return (
-    <Router>
+    <HelmetProvider>
+      <Router>
       <AuthProvider> {/* Wrap your entire app with AuthProvider */}
         <div className="flex w-full flex-col min-h-screen bg-white absolute">
           <Navigation /> {/* Global navigation */}
@@ -49,7 +51,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/posts" element={<PublicPostList />} />
-            <Route path="/posts/:id" element={<PublicPostDetail />} /> {/* Route for single public post */}
+            <Route path="/posts/:slug" element={<PublicPostDetail />} /> {/* Route for single public post */}
             <Route path="/posts/category/:categoryName" element={<PublicPostList />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
@@ -91,6 +93,8 @@ function App() {
         </div>
       </AuthProvider>
     </Router>
+    </HelmetProvider>
+    
   )
 }
 

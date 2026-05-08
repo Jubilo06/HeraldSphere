@@ -14,14 +14,14 @@ router.get('/', postController.getAllPosts);
 router.post("/contact", postController.handleContactForm);
 
 // GET a single post by ID
-router.get('/:id', postController.getPostById);
+router.get('/:slug', postController.getPostBySlug);
 
 // CREATE a new post
 router.post("/", authenticateJWT, postController.createPost);
 
 
 // Existing routes...
-router.get('/:id', postController.getPostById);
+router.get('/:slug', postController.getPostBySlug);
 
 // --- NEW INTERACTION ROUTES ---
 // LIKE: PUT /api/posts/:id/like
@@ -32,6 +32,7 @@ router.get('/:id/comments', postController.getComments);
 
 // POST COMMENT: POST /api/posts/:id/comments
 router.post('/:id/comments', postController.createComment);
+router.get("/sitemap.xml", postController.getSitemap);
 
 // UPDATE a post by ID
 router.put(
@@ -59,6 +60,10 @@ router.get(
 router.delete('/:id', authenticateJWT,
   checkPostOwnershipOrAdmin, postController.deletePost);
 
+router.get(
+  "/admin/migrate-slugs",
+  postController.migrateSlugs,
+);
 
 
 export default router;

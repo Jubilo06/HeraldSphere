@@ -1,5 +1,6 @@
 import mongoose from "mongoose"
 import { Schema, model } from 'mongoose';
+import slugify from "slugify";
 
 const postSchema = new Schema({
   title: {
@@ -11,6 +12,7 @@ const postSchema = new Schema({
     type: String,
     required: true,
   },
+  slug: { type: String, unique: true }, // SEO URL
   author: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -38,6 +40,24 @@ const postSchema = new Schema({
     type: Date,
     default: Date.now(),
   },
+});
+
+// AUTO-GENERATE SLUG BEFORE SAVING
+postSchema.pre("save", async function () {
+  // 1. Only generate slug if title is new/changed OR slug is empty
+  if (this.isModified("title") || !this.slug) {
+    // 2. Create the slug
+    let baseSlug = slugify(this.title, { lower: true, strict: true });
+
+    // 3. To ensure uniqueness (preventing the 11000 error)
+    // If the slug isn't already set (like in our migration script), add a suffix
+    if (!this.slug) {
+      this.slug = `${baseSlug}-${Math.random().toString(36).substring(7)}`;
+    } else {
+      this.slug = baseSlug;
+    }
+  }
+  // IMPORTANT: No next() call here when using async/await
 });
 
 export default model("Post", postSchema);
