@@ -14,12 +14,39 @@ function Footer() {
     const [status, setStatus] = useState({ type: '', msg: '' }); // 'loading', 'success', 'error'
     const [loading, setLoading] = useState(false);
     const footerRef = useRef(null);
+    // const socialLinks = [
+    // { name: 'Twitter', href: '#', icon: FaTwitter },
+    // { name: 'Instagram', href: '#', icon: FaInstagram },
+    // { name: 'LinkedIn', href: '#', icon: FaLinkedinIn },
+    // { name: 'Github', href: '#', icon: FaGithub },
+    // ];
     const socialLinks = [
-    { name: 'Twitter', href: '#', icon: FaTwitter },
-    { name: 'Instagram', href: '#', icon: FaInstagram },
-    { name: 'LinkedIn', href: '#', icon: FaLinkedinIn },
-    { name: 'Github', href: '#', icon: FaGithub },
-    ];
+    { 
+      name: 'Twitter', 
+      href: 'https://twitter.com/heraldsphere', // Replace with your real URL
+      icon: FaTwitter,
+      hoverColor: 'hover:bg-[#1DA1F2]'
+    },
+    { 
+      name: 'Instagram', 
+      href: 'https://instagram.com/heraldsphere', 
+      icon: FaInstagram,
+      hoverColor: 'hover:bg-[#E4405F]'
+    },
+    { 
+      name: 'LinkedIn', 
+      href: 'https://linkedin.com/company/heraldsphere', 
+      icon: FaLinkedinIn,
+      hoverColor: 'hover:bg-[#0077B5]'
+    },
+    { 
+      name: 'Github', 
+      href: 'https://github.com/temmy-abbey', 
+      icon: FaGithub,
+      hoverColor: 'hover:bg-[#333]'
+    },
+  ];
+
     
     // GSAP Entrance Animation
   useGSAP(() => {
@@ -81,12 +108,26 @@ function Footer() {
             <p className="text-sm leading-relaxed text-slate-400 mb-8">
               Deciphering the digital landscape. Curated insights at the intersection of technology, culture, and business.
             </p>
-            <div className="flex gap-4">
+            {/* <div className="flex gap-4">
               {socialLinks.map((social) => (
                 <a 
                   key={social.name} 
                   href={social.href} 
                   className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-indigo-600 hover:border-indigo-600 hover:-translate-y-1 transition-all duration-300 group"
+                >
+                  <social.icon className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
+                </a>
+              ))}
+            </div> */}
+            <div className="flex gap-3">
+              {socialLinks.map((social) => (
+                <a 
+                  key={social.name} 
+                  href={social.href} 
+                  target="_blank"           // Opens in new tab
+                  rel="noopener noreferrer" // Security best practice for external links
+                  className={`w-9 h-9 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center transition-all duration-300 group ${social.hoverColor} hover:border-transparent hover:-translate-y-1`}
+                  title={`Follow us on ${social.name}`}
                 >
                   <social.icon className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
                 </a>
@@ -123,7 +164,7 @@ function Footer() {
           <div className="footer-col relative">
             <div className="bg-slate-900/80 backdrop-blur-xl p-8 rounded-3xl border border-slate-800 shadow-2xl">
               <h3 className="text-white font-black uppercase tracking-[0.2em] text-xs mb-4">Newsletter</h3>
-              <p className="text-xs text-slate-400 mb-6 leading-relaxed">Join the Sphere. Get the week's most critical dispatches.</p>
+              <p className="text-xs text-slate-400 mb-6 leading-relaxed">Join the Sphere. Get the week's most Interesting and up-to-date articles.</p>
               <form onSubmit={handleSubscribe} className="space-y-4">
                 <input 
                   type="email" 

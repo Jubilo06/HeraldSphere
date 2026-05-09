@@ -18,7 +18,7 @@ function About() {
             The Voice of the <span className="text-indigo-500">Sphere.</span>
           </h1>
           <p className="text-gray-400 text-lg md:text-xl leading-relaxed">
-            Herald Sphere is more than a blog. It is a digital dispatch for those who seek to understand the pulse of our changing world.
+            Herald Sphere is more than a blog. It is a digital platform for those who seek to understand the pulse of our changing world.
           </p>
         </div>
       </section>
@@ -29,7 +29,7 @@ function About() {
           <div>
             <h3 className="text-3xl font-black text-slate-900 mb-6">Integrity in every <span className="text-indigo-600">byte.</span></h3>
             <p className="text-slate-600 mb-6 leading-relaxed">
-              Founded in 2026, Herald Sphere emerged from a simple realization: in an era of noise, clarity is the ultimate luxury. We cut through the static to deliver curated insights across Science, Technology, and Business.
+              Founded in 2026, Herald Sphere emerged from a simple realization: in an era of noise, clarity is the ultimate luxury. We cut through the static to deliver curated insights across Science, Technology, Business, Sports, Health and other important Topics.
             </p>
             <div className="space-y-4">
               {['Global Perspectives', 'Unbiased Reporting', 'Deep Analysis'].map((item) => (
@@ -74,8 +74,8 @@ function About() {
               </p>
               <div className="mt-8 flex justify-center md:justify-start gap-4">
                 {/* Social links placeholder */}
-                <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white hover:bg-indigo-600 transition cursor-pointer font-bold">in</div>
-                <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white hover:bg-indigo-600 transition cursor-pointer font-bold">X</div>
+                {/* <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white hover:bg-indigo-600 transition cursor-pointer font-bold">in</div> */}
+                {/* <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white hover:bg-indigo-600 transition cursor-pointer font-bold">X</div> */}
               </div>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from './Api';
-import { FaHeart, FaRegHeart, FaTwitter, FaLinkedin, FaChevronLeft, FaReply } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaTwitter, FaLinkedinIn, FaChevronLeft, FaReply,FaLink, FaCheck, FaFacebookF, FaWhatsapp, FaTelegramPlane, FaInstagram,  } from 'react-icons/fa';
 import DOMPurify from 'dompurify';
 import { Helmet } from 'react-helmet-async';
 
@@ -82,6 +82,7 @@ function PublicPostDetail() {
   const [relatedPosts, setRelatedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const[error, setError]=useState(null)
+  const [copied, setCopied] = useState(false);
   
   // Interaction States
   const [liked, setLiked] = useState(false);
@@ -155,6 +156,27 @@ function PublicPostDetail() {
       setReplyingTo(null);
     } catch (err) { console.error(err); }
   };
+   const shareUrl = window.location.href;
+  const shareTitle = post?.title || "Check out this article on Herald Sphere";
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000); // Reset icon after 2 seconds
+  };
+
+  const shareActions = {
+    twitter: () => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`, '_blank'),
+    facebook: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank'),
+    linkedin: () => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, '_blank'),
+    whatsapp: () => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareTitle + " " + shareUrl)}`, '_blank'),
+    telegram: () => window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`, '_blank'),
+    instagram: () => {
+      copyToClipboard();
+      alert("Link copied to clipboard! Open Instagram to share it in your Story or Bio.");
+    }
+  };
+
 
   if (loading) return <div className="h-screen flex items-center justify-center bg-white"><div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div></div>;
   if (!post) return <div className="text-center py-20 font-black text-slate-300">NOT FOUND</div>;
@@ -232,7 +254,53 @@ function PublicPostDetail() {
               {liked ? <FaHeart className="text-rose-500" size={14}/> : <FaRegHeart className="text-slate-300" size={14}/>}
               <span className="text-[10px] font-black text-slate-900">{likesCount}</span>
             </button>
-            <div className="flex gap-4 text-slate-300"><FaTwitter size={14}/><FaLinkedin size={14}/></div>
+             <div className="flex flex-wrap items-center gap-4 text-slate-400 py-4 border-y border-slate-100 mb-6">
+      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-300 mr-2">Share Dispatch:</span>
+      
+      {/* WhatsApp */}
+      <button onClick={shareActions.whatsapp} className="hover:text-[#25D366] transition-colors" title="Share on WhatsApp">
+        <FaWhatsapp size={18}/>
+      </button>
+
+      {/* Telegram */}
+      <button onClick={shareActions.telegram} className="hover:text-[#0088cc] transition-colors" title="Share on Telegram">
+        <FaTelegramPlane size={18}/>
+      </button>
+
+      {/* Twitter */}
+      <button onClick={shareActions.twitter} className="hover:text-[#1DA1F2] transition-colors" title="Share on Twitter">
+        <FaTwitter size={18}/>
+      </button>
+
+      {/* Instagram */}
+      <button onClick={shareActions.instagram} className="hover:text-[#E4405F] transition-colors" title="Share on Instagram">
+        <FaInstagram size={18}/>
+      </button>
+
+      {/* LinkedIn */}
+      <button onClick={shareActions.linkedin} className="hover:text-[#0077B5] transition-colors" title="Share on LinkedIn">
+        <FaLinkedinIn size={18}/>
+      </button>
+
+      <div className="w-px h-4 bg-slate-200 mx-1"></div>
+
+      {/* Generic Copy Link */}
+      <button 
+        onClick={copyToClipboard}
+        className="flex items-center gap-1.5 hover:text-indigo-600 transition-colors group"
+      >
+        {copied ? (
+          <span className="flex items-center gap-1 text-[9px] font-black text-emerald-500 uppercase tracking-tighter animate-in fade-in zoom-in">
+            <FaCheck size={10} /> Copied
+          </span>
+        ) : (
+          <>
+            <FaLink size={14} className="group-hover:rotate-45 transition-transform" />
+            <span className="text-[9px] font-black uppercase tracking-tighter">Copy Link</span>
+          </>
+        )}
+      </button>
+    </div>
           </div>
 
           {/* CONTENT */}
@@ -241,7 +309,7 @@ function PublicPostDetail() {
 
           {/* COMMENTS LIST */}
           <section className="mt-6 border-t border-slate-100 pt-4">
-            <h3 className="text-xs font-black uppercase text-slate-900 mb-6 tracking-widest">Transmissions ({comments.length})</h3>
+            <h3 className="text-xs font-black uppercase text-slate-900 mb-6 tracking-widest">Comments ({comments.length})</h3>
             
             <div className="mb-10">
                {threadedComments.map(c => (
@@ -250,12 +318,12 @@ function PublicPostDetail() {
                    setCommentForm={setCommentForm} commentForm={commentForm} handleSubmit={handleCommentSubmit}
                  />
                ))}
-               {comments.length === 0 && <p className="text-slate-400 italic text-[11px]">No transmissions yet.</p>}
+               {comments.length === 0 && <p className="text-slate-400 italic text-[11px]">No comments yet.</p>}
             </div>
 
             {/* NEW COMMENT FORM (Always visible for new threads) */}
             <div className="bg-slate-950 p-6 rounded-4xl text-white shadow-2xl">
-              <p className="text-[10px] font-black uppercase tracking-widest mb-4">New Transmission</p>
+              <p className="text-[10px] font-black uppercase tracking-widest mb-4">New Comment</p>
               <form onSubmit={handleCommentSubmit} className="space-y-3">
                 <textarea 
                   required className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs outline-none focus:ring-1 focus:ring-indigo-500" 
@@ -276,7 +344,7 @@ function PublicPostDetail() {
         {/* SIDEBAR */}
         <aside className="lg:col-span-4 space-y-6 mt-6 lg:mt-4">
           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-            <p className="text-[8px] font-black uppercase text-indigo-600 mb-3 underline">Journalist</p>
+            <p className="text-[8px] font-black uppercase text-indigo-600 mb-3 underline">Author</p>
             <div className="flex items-center gap-3">
               <img src={post.author?.profilePic ? `http://localhost:5014${post.author.profilePic}` : '/logo.webp'} className="w-10 h-10 rounded-xl object-cover shadow-sm" alt="" />
               <div className="min-w-0">
@@ -287,10 +355,10 @@ function PublicPostDetail() {
           </div>
 
           <div className="px-1">
-            <h5 className="text-[9px] font-black uppercase text-slate-400 mb-4 tracking-widest">Related Dispatches</h5>
+            <h5 className="text-[9px] font-black uppercase text-slate-400 mb-4 tracking-widest">Related Articles</h5>
             <div className="space-y-4">
               {relatedPosts.map(rp => (
-                <Link key={rp._id} to={`/posts/${rp._id}`} className="group flex gap-3 items-center">
+                <Link key={rp._id} to={`/posts/${rp.slug}`} className="group flex gap-3 items-center">
                   <img src={rp.mainImageUrl || '/logo.webp'} className="w-12 h-12 rounded-lg object-cover bg-slate-100" alt="" />
                   <h4 className="text-[10px] font-bold text-slate-900 group-hover:text-indigo-600 line-clamp-2 leading-tight tracking-tight uppercase">{rp.title}</h4>
                 </Link>

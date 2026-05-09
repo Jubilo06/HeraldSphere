@@ -12,7 +12,7 @@ function Home() {
     <div className='w-full min-h-screen bg-white'>
       
       {/* 1. HERO SECTION (THE ORB) */}
-      <div className="relative w-full h-[600px] overflow-hidden bg-black">
+      <div className="relative w-full h-150 overflow-hidden bg-black">
         <div className="absolute inset-0 z-0">
           <Orb
             hoverIntensity={2}
@@ -30,7 +30,7 @@ function Home() {
             </span>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-tight mb-4 tracking-tight">
-              Herald <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Sphere</span>
+              Herald <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-400 via-purple-400 to-pink-400">Sphere</span>
             </h1>
 
             <p className="text-gray-400 text-lg md:text-xl font-medium max-w-xl mx-auto leading-relaxed">
@@ -55,7 +55,7 @@ function Home() {
       {!isAuthenticated && (
         <section className="relative py-20 bg-slate-950 overflow-hidden">
           {/* Subtle background detail */}
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-indigo-900/20 to-transparent"></div>
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-linear-to-l from-indigo-900/20 to-transparent"></div>
           
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -63,7 +63,7 @@ function Home() {
                 <h2 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.4em] mb-4">The Contributor's Guild</h2>
                 <h3 className="text-3xl md:text-5xl font-black text-white tracking-tighter leading-tight mb-6">
                   Have a Story the <br/> 
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Sphere Needs to Hear?</span>
+                  <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-400 to-purple-400">Sphere Needs to Hear?</span>
                 </h3>
                 <p className="text-slate-400 text-lg mb-8 leading-relaxed max-w-lg font-medium">
                   Herald Sphere is looking for thinkers, analysts, and visionaries. We provide the platform; you provide the perspective. Join our global network of contributors today.
@@ -91,7 +91,7 @@ function Home() {
               {/* Decorative "Newsroom" Card */}
               <div className="hidden lg:block relative">
                  <div className="absolute -inset-4 bg-indigo-500/10 blur-3xl rounded-full"></div>
-                 <div className="relative bg-white/5 border border-white/10 p-8 rounded-[2rem] backdrop-blur-xl">
+                 <div className="relative bg-white/5 border border-white/10 p-8 rounded-4xl backdrop-blur-xl">
                     <div className="flex items-center gap-4 mb-6">
                       <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center font-black text-white">H</div>
                       <div className="h-2 w-32 bg-white/10 rounded-full"></div>

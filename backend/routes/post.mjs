@@ -26,6 +26,7 @@ router.get('/:slug', postController.getPostBySlug);
 // --- NEW INTERACTION ROUTES ---
 // LIKE: PUT /api/posts/:id/like
 router.put('/:id/like', postController.handleLike);
+router.get("/search/suggestions", postController.getSearchSuggestions);
 
 // COMMENTS: GET /api/posts/:id/comments
 router.get('/:id/comments', postController.getComments);

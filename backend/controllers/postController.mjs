@@ -490,6 +490,22 @@ export const migrateSlugs = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+export const getSearchSuggestions = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.length < 2) return res.json([]); // Don't search for 1 letter
+
+    const suggestions = await Post.find({
+      title: { $regex: q, $options: "i" }, // Case-insensitive search
+    })
+      .select("title slug mainImageUrl") // Only get what we need for the dropdown
+      .limit(5); // Professional limit
+
+    res.json(suggestions);
+  } catch (error) {
+    res.status(500).json({ message: "Search error" });
+  }
+};
 
 const postController = {
   getAllPosts,
@@ -505,7 +521,8 @@ const postController = {
   getComments,
   createComment,
   getSitemap,
-  migrateSlugs
+  migrateSlugs,
+  getSearchSuggestions
 
 };
 

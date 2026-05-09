@@ -212,7 +212,7 @@ return (
                 {isDropdownOpen && (
                   <div className="absolute left-0 w-52 bg-white border border-slate-100 shadow-2xl rounded-2xl py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="px-4 py-2 mb-1 border-b border-slate-50">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Browse by Topic</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Browse by Category</p>
                     </div>
                     {categories.map((cat) => (
                       <Link
