@@ -41,10 +41,10 @@ function App() {
     <HelmetProvider>
       <Router>
       <AuthProvider> {/* Wrap your entire app with AuthProvider */}
-        <div className="flex w-full flex-col min-h-screen bg-white absolute">
+        <div className="flex w-full flex-col min-h-screen bg-white">
           <Navigation /> {/* Global navigation */}
           {/* MAIN CONTENT AREA */}
-          <main className="grow w-full ">
+          <main className="grow min-h-screen w-full ">
             <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
@@ -87,9 +87,7 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
           </main>
-          {/* <div className='mb-0 w-full'>
-            <Footer />
-          </div> */}
+          <Footer />
         </div>
       </AuthProvider>
     </Router>
