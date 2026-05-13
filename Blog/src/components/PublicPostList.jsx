@@ -54,6 +54,14 @@ function PublicPostList() {
     setSearchParams({ search: searchInput });
   };
 
+  const calculateReadTime = (content) => {
+  const wordsPerMinute = 200;
+  const text = content.replace(/<[^>]*>?/gm, ''); // Remove HTML tags
+  const noOfWords = text.split(/\s+/).length;
+  const minutes = Math.ceil(noOfWords / wordsPerMinute);
+  return `${minutes} min read`;
+};
+
   if (loading) return <div className="flex justify-center items-center h-screen">
     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-indigo-600"></div></div>;
   
@@ -62,18 +70,7 @@ function PublicPostList() {
 
   return (
     <div className='w-full'>
-      {/* <form onSubmit={handleSearch} className="mb-8 flex gap-2 w-[90%] justify-self-center mt-10">
-        <input 
-          type="text" 
-          placeholder="Search by title or category..." 
-          className="flex-1 p-3 border rounded-lg shadow-sm"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-        />
-        <button type="submit" className="bg-indigo-600 text-white p-2 rounded-lg">Search</button>
-      </form> */}
       <GlobalSearch />
-      
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
   {/* SECTION HEADER */}
   <div className="text-center mb-12">
@@ -178,7 +175,7 @@ function PublicPostList() {
               <div className="flex items-center text-xs text-gray-400 mb-3 space-x-2">
                 <span>{new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 <span>•</span>
-                <span className="text-indigo-600 font-semibold italic">5 min read</span>
+                <span className="text-indigo-600 font-semibold italic">{calculateReadTime(post.content)}</span>
               </div>
 
               <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2 mb-3">

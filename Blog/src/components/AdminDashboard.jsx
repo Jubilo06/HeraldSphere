@@ -153,6 +153,37 @@ function AdminDashboard() {
           </div>
         </div>
 
+        <section className="mb-12">
+  <h3 className="text-xl font-black text-slate-900 mb-6 uppercase tracking-tighter">Editorial Queue</h3>
+  <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+    {posts.filter(p => p.status === 'pending').map(post => (
+      <div key={post._id} className="p-6 flex items-center justify-between border-b border-slate-50 last:border-0">
+        <div>
+          <h4 className="font-bold text-slate-900">{post.title}</h4>
+          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">By {post.author.username}</p>
+        </div>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => handleStatusUpdate(post._id, 'published')}
+            className="px-4 py-2 bg-emerald-500 text-white text-[10px] font-black uppercase rounded-lg"
+          >
+            Approve & Publish
+          </button>
+          <button 
+            onClick={() => handleStatusUpdate(post._id, 'rejected')}
+            className="px-4 py-2 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-lg"
+          >
+            Reject
+          </button>
+        </div>
+      </div>
+    ))}
+    {posts.filter(p => p.status === 'pending').length === 0 && (
+      <p className="p-10 text-center text-slate-400 italic text-sm">The editorial queue is clear.</p>
+    )}
+  </div>
+</section>
+
         {/* USERS TABLE */}
         <section className="mb-12">
           <h3 className="text-xl font-bold text-gray-800 mb-4 ml-2">User Directory</h3>

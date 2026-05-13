@@ -82,7 +82,9 @@ export const getAllPosts=async (req, res) => {
   const { category } = req.query;
   const { search } = req.query;
   try {
-    let filter = {};
+     let filter = {
+       $or: [{ status: "published" }, { status: { $exists: false } }],
+     };
     if (category && category !== "null" && category !== "undefined") {
       filter.category = category;
     }
@@ -106,6 +108,7 @@ export const getAllPosts=async (req, res) => {
       posts.map((p) => ({
         _id: p._id,
         title: p.title,
+        status: p.status,
         authorId: p.author?._id, // Log author ID if available
         authorName: p.author
           ? `${p.author.firstName} ${p.author.lastName}`
@@ -507,11 +510,70 @@ export const getSearchSuggestions = async (req, res) => {
   }
 };
 
+export const updatePostStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status, reason } = req.body; // e.g., status: 'published'
+
+  try {
+    const post = await Post.findByIdAndUpdate(
+      id,
+      { status, rejectionReason: reason || "" },
+      { new: true },
+    );
+    res.json({ message: `Status updated to ${status}`, post });
+  } catch (error) {
+    res.status(500).json({ message: "Workflow update failed" });
+  }
+};
+
+export const runFullMigration = async (req, res) => {
+  console.log("Starting full database migration...");
+  try {
+    // 1. Bulk Update: Set status to 'published' for any post missing it
+    const statusResult = await Post.updateMany(
+      { status: { $exists: false } },
+      { $set: { status: "published" } },
+    );
+
+    // 2. Loop Update: Calculate readingTime for existing posts
+    // We fetch all posts where readingTime is 0 or doesn't exist
+    const postsToUpdate = await Post.find({
+      $or: [{ readingTime: { $exists: false } }, { readingTime: 0 }],
+    });
+
+    let readingTimeCount = 0;
+    for (let post of postsToUpdate) {
+      const wordsPerMinute = 200;
+      const plainText = post.content.replace(/<[^>]*>?/gm, ""); // Strip HTML
+      const wordCount = plainText
+        .split(/\s+/)
+        .filter((w) => w.length > 0).length;
+
+      post.readingTime = Math.ceil(wordCount / wordsPerMinute) || 1;
+      await post.save(); // Save individual post to apply calculation
+      readingTimeCount++;
+    }
+
+    console.log("Migration finished successfully.");
+    res.json({
+      message: "Herald Sphere database migration complete.",
+      details: {
+        statusFieldsAdded: statusResult.modifiedCount,
+        readingTimesCalculated: readingTimeCount,
+      },
+    });
+  } catch (error) {
+    console.error("Migration Failed:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 const postController = {
   getAllPosts,
   getPostBySlug,
   createPost,
   updatePost,
+  updatePostStatus,
   getPostByUser,
   deletePost,
   getAdminPost,
@@ -522,7 +584,8 @@ const postController = {
   createComment,
   getSitemap,
   migrateSlugs,
-  getSearchSuggestions
+  getSearchSuggestions, 
+  runFullMigration
 
 };
 

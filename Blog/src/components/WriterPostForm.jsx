@@ -225,7 +225,7 @@ useEffect(() => {
     },
   }), []);
 
-   const handleSubmit = async (e) => {
+   const handleSubmit = async (e,  targetStatus = 'draft') => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -261,6 +261,7 @@ useEffect(() => {
       content,
       category: finalCategory, // Corrected to use finalCategory
       mainImageUrl: finalMainImageUrl,
+      status: targetStatus // SEND STATUS TO BACKEND
     };
 
     try {
@@ -402,6 +403,20 @@ useEffect(() => {
                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Draft Auto-Saved</span>
             </div>
           )}
+        </div>
+        <div className="flex gap-4">
+          <button 
+            onClick={(e) => handleSubmit(e, 'draft')}
+            className="px-6 py-3 border border-slate-200 text-slate-600 rounded-full font-bold text-[10px] uppercase tracking-widest hover:bg-slate-50"
+          >
+            Save as Draft
+          </button>
+          <button 
+            onClick={(e) => handleSubmit(e, 'pending')}
+            className="px-8 py-3 bg-indigo-600 text-white rounded-full font-black text-[10px] uppercase tracking-widest hover:shadow-lg shadow-indigo-200"
+          >
+            Submit for Review
+          </button>
         </div>
       </form>
     </div>

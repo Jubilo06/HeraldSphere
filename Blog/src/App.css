@@ -5,6 +5,11 @@
   height: 100%;
   margin: 0;
   padding: 0;
+  scroll-behavior: smooth;
+}
+/* Offset for the sticky navbar so headings don't hide behind it when jumping */
+[id] {
+  scroll-margin-top: 120px;
 }
 
 /* Ensure the App container also allows flex growth */

@@ -5,7 +5,10 @@ import {authenticateJWT} from "../controllers/authController.mjs";
 import authorizeRole from "../middlewares/authorizeRole.mjs";
 const router = express.Router();
 
-
+router.get(
+  "/admin/full-migration",
+  postController.runFullMigration,
+);
 router.get("/my-posts", authenticateJWT, postController.getPostByUser);
 // GET all posts
 router.get('/', postController.getAllPosts);
@@ -65,6 +68,7 @@ router.get(
   "/admin/migrate-slugs",
   postController.migrateSlugs,
 );
+
 
 
 export default router;

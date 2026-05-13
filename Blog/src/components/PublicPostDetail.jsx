@@ -4,6 +4,7 @@ import api from './Api';
 import { FaHeart, FaRegHeart, FaTwitter, FaLinkedinIn, FaChevronLeft, FaReply,FaLink, FaCheck, FaFacebookF, FaWhatsapp, FaTelegramPlane, FaInstagram,  } from 'react-icons/fa';
 import DOMPurify from 'dompurify';
 import { Helmet } from 'react-helmet-async';
+import { ReadingProgress } from './ReadingProgress';
 
 // --- 1. SUB-COMPONENT: INDIVIDUAL COMMENT & RECURSIVE REPLIES ---
 const CommentItem = ({ comment, onReply, replyingTo, setCommentForm, commentForm, handleSubmit }) => {
@@ -11,6 +12,7 @@ const CommentItem = ({ comment, onReply, replyingTo, setCommentForm, commentForm
 
   return (
     <div className="mb-6">
+     <ReadingProgress /> 
       
       <div className="flex gap-3 items-start group">
         {/* Avatar */}
@@ -89,6 +91,9 @@ function PublicPostDetail() {
   const [likesCount, setLikesCount] = useState(0);
   const [replyingTo, setReplyingTo] = useState(null);
   const [commentForm, setCommentForm] = useState({ name: '', email: '', comment: '', parentId: null });
+  //  const [toc, setToc] = useState([]);
+
+  
 
   useEffect(() => { window.scrollTo(0, 0); loadData(); }, [id]);
   
@@ -126,6 +131,8 @@ function PublicPostDetail() {
     setLoading(false);
   }
 };
+
+
 
   // Organize flat list into a tree for replies
   const threadedComments = useMemo(() => {
@@ -177,7 +184,74 @@ function PublicPostDetail() {
     }
   };
 
+  // 1. Process the content to inject IDs into H2 and H3 tags
+const processedContent = useMemo(() => {
+  if (!post?.content) return "";
 
+  // Use DOMParser instead of Regex (much safer and faster)
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(post.content, 'text/html');
+  const headings = doc.querySelectorAll('h2, h3');
+
+  headings.forEach((h, index) => {
+    // Generate a clean, unique ID
+    const cleanText = h.innerText || "";
+    const id = cleanText
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '') // remove special chars
+      .replace(/\s+/g, '-')     // spaces to hyphens
+      + '-' + index;            // guarantee uniqueness
+      
+    h.setAttribute('id', id);
+  });
+
+  return doc.body.innerHTML;
+}, [post?.content]);
+
+// 2. Updated getHeadings function to match the IDs exactly
+const toc = useMemo(() => {
+  if (!post?.content) return [];
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(post.content, 'text/html');
+  const headings = Array.from(doc.querySelectorAll('h2, h3'));
+
+  return headings.map((h, index) => ({
+    id: (h.innerText || "").toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-') + '-' + index,
+    text: h.innerText,
+    level: h.tagName
+  }));
+}, [post?.content]);
+
+  const calculateReadTime = (content) => {
+  const wordsPerMinute = 200;
+  const text = content.replace(/<[^>]*>?/gm, ''); // Remove HTML tags
+  const noOfWords = text.split(/\s+/).length;
+  const minutes = Math.ceil(noOfWords / wordsPerMinute);
+  return `${minutes} min read`;
+};
+
+const getHeadings = (html) => {
+  if (!html) return []; // Safety check
+
+  // 1. Correct method name: parseFromString
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  
+  // 2. Find all H2 and H3 tags
+  const headingElements = Array.from(doc.querySelectorAll('h2, h3'));
+  
+  return headingElements.map((el, index) => {
+    const text = el.innerText;
+    
+    // 3. Create a URL-friendly ID (slugify equivalent for frontend)
+    const id = text
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '') // remove special characters
+      .replace(/\s+/g, '-')     // replace spaces with hyphens
+      + '-' + index;            // add index to guarantee uniqueness
+
+    return { id, text, level: el.tagName };
+  });
+};
   if (loading) return <div className="h-screen flex items-center justify-center bg-white"><div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div></div>;
   if (!post) return <div className="text-center py-20 font-black text-slate-300">NOT FOUND</div>;
 
@@ -240,9 +314,28 @@ function PublicPostDetail() {
       </header>
 
       {/* MAIN GRID */}
-      <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div  className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-12 mt-10">
+
+        {/* SIDEBAR: TABLE OF CONTENTS (Desktop Only) */}
+        <aside className="hidden lg:block lg:col-span-3">
+          <div className="sticky top-32">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6 border-b border-slate-100 pb-2">Contents</h4>
+            <nav className="space-y-4">
+              {toc.map((item) => (
+                <a 
+                  key={item.id} 
+                  href={`#${item.id}`}
+                  className={`block text-xs font-bold transition-all hover:text-indigo-600 ${item.level === 'H3' ? 'ml-4 text-slate-400' : 'text-slate-600'}`}
+                >
+                  {item.text}
+                </a>
+              ))}
+              {toc.length === 0 && <p className="text-[10px] italic text-slate-300 font-medium uppercase">No sub-headings in this dispatch</p>}
+            </nav>
+          </div>
+        </aside>
         
-        <main className="lg:col-span-8">
+        <main className="lg:col-span-6">
           {post.mainImageUrl && (
              <img src={post.mainImageUrl.startsWith('http') ? post.mainImageUrl : `http://localhost:5014${post.mainImageUrl}`} 
                   className="w-full h-auto rounded-xl mt-4 mb-4 shadow-sm" alt="" />
@@ -304,8 +397,18 @@ function PublicPostDetail() {
           </div>
 
           {/* CONTENT */}
-          <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed mb-8 ql-editor p-0! min-h-0!" 
-               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content, { ADD_TAGS: ["iframe"], ADD_ATTR: ["allow", "allowfullscreen", "frameborder"] }) }} />
+          <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed mb-8 ql-editor p-0! min-h-0!">
+             <div 
+                className="ql-editor p-0! min-h-0!" 
+                style={{ height: 'auto' }} 
+                dangerouslySetInnerHTML={{ 
+                  __html: DOMPurify.sanitize(processedContent, { 
+                    ADD_TAGS: ["iframe"], 
+                    ADD_ATTR: ["allow", "allowfullscreen", "frameborder", "id"] 
+                  }) 
+                }} 
+              />  
+          </div> 
 
           {/* COMMENTS LIST */}
           <section className="mt-6 border-t border-slate-100 pt-4">
@@ -342,7 +445,7 @@ function PublicPostDetail() {
         </main>
 
         {/* SIDEBAR */}
-        <aside className="lg:col-span-4 space-y-6 mt-6 lg:mt-4">
+        <aside className="lg:col-span-3 space-y-6 mt-6 lg:mt-4">
           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
             <p className="text-[8px] font-black uppercase text-indigo-600 mb-3 underline">Author</p>
             <div className="flex items-center gap-3">

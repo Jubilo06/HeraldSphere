@@ -57,6 +57,17 @@ function MyPost() {
               <div className='flex w-full  flex-wrap justify-self-start 
               h-auto gap-6 mb-4 border-b-black shadow-2xl bg-white text-black 
               offset-4 p-4' key={post._id}>
+                <div className="flex items-center gap-3">
+                  <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter ${
+                    post.status === 'published' ? 'bg-emerald-100 text-emerald-600' :
+                    post.status === 'pending' ? 'bg-amber-100 text-amber-600' :
+                    post.status === 'rejected' ? 'bg-rose-100 text-rose-600' :
+                    'bg-slate-100 text-slate-500'
+                  }`}>
+                    {post.status}
+                  </span>
+                  <h3 className="font-bold text-slate-900">{post.title}</h3>
+                </div>
                 <div>
                   <Link to={`/edit-post/${post._id}`}>{post.title}</Link> 
                   - {new Date(post.createdAt).toLocaleDateString()}

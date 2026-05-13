@@ -87,9 +87,9 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
           </main>
-          <div className='mb-0 w-full'>
+          {/* <div className='mb-0 w-full'>
             <Footer />
-          </div>
+          </div> */}
         </div>
       </AuthProvider>
     </Router>
