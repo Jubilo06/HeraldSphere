@@ -12,6 +12,7 @@ function Register() {
     email:'',
     firstName:'',
     lastName:'', 
+     bio: '',
   });
   const [profilePic, setProfilePic] = useState(null);
   const [error, setError] = useState(null);
@@ -142,6 +143,19 @@ function Register() {
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
                 <input type="email" name="email" value={formData.email} onChange={handleChange} required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" />
               </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">
+                  Bio (Optional)
+                </label>
+                <textarea 
+                  name="bio" 
+                  value={formData.bio} 
+                  onChange={handleChange} 
+                  placeholder="Tell us a bit about yourself and your writing style..."
+                  rows="3"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all resize-none" 
+                />
+                </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Username</label>
                 <input name="username" value={formData.username} onChange={handleChange} required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" />

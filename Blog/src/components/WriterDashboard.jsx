@@ -6,19 +6,27 @@ import { Link } from 'react-router-dom'
 function WriterDashboard() {
 const { user } = useContext(AuthContext);
 
+// const getProfilePic = () => {
+//   if (!user || !user.profilePic) {
+//     return 'https://via.placeholder.com/150';
+//   }
+
+//   if (user.profilePic.startsWith('http')) {
+//     return user.profilePic;
+//   }
+//   const cleanPath = user.profilePic.replace(/^\//, '');
+//   if (cleanPath.startsWith('uploads')) {
+//     return `http://localhost:5014/${cleanPath}`;
+//   }
+//   return `http://localhost:5014/uploads/profile_pics/${cleanPath}`;
+// };
+
 const getProfilePic = () => {
   if (!user || !user.profilePic) {
     return 'https://via.placeholder.com/150';
   }
-
-  if (user.profilePic.startsWith('http')) {
-    return user.profilePic;
-  }
-  const cleanPath = user.profilePic.replace(/^\//, '');
-  if (cleanPath.startsWith('uploads')) {
-    return `http://localhost:5014/${cleanPath}`;
-  }
-  return `http://localhost:5014/uploads/profile_pics/${cleanPath}`;
+  // If it's a Cloudinary link, it starts with http, return it directly
+  return user.profilePic; 
 };
 
 const profilePicUrl = getProfilePic();
@@ -52,6 +60,15 @@ console.log("Current User Data:", user);
             <p className="text-slate-500 max-w-lg leading-relaxed">
               Ready to shape the Sphere? Manage your contributions, track your impact, and craft your next global dispatch from here.
             </p>
+
+            {/* ADD BIO HERE */}
+            {user?.bio && (
+              <div className="mt-4 p-4 bg-indigo-50/50 border-l-4 border-indigo-500 rounded-r-xl max-w-lg">
+                <p className="text-slate-700 text-sm italic leading-relaxed">
+                  "{user.bio}"
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

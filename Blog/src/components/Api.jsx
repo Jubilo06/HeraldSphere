@@ -5,7 +5,7 @@ console.log(`[API Config] Running in ${import.meta.env.PROD ? 'Production' : 'De
 console.log(`[API Config] Base URL set to: ${baseURL}`);
 const api = axios.create({
   baseURL: baseURL,
-  timeout: 30000,  // Longer for mobile
+  timeout: 60000,  // Longer for mobile
     withCredentials: true,  // Cross-origin cookies
     headers: {
       'Content-Type': 'application/json',

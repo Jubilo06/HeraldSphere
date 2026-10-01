@@ -21,11 +21,12 @@ export const register = async (req, res) => {
       firstName,
       lastName,
       password,
+      bio,
       role = "writer",
     } = req.body;
     console.log("Multer req.file object in authController:", req.file);
     const profilePicPath = req.file
-      ? `/uploads/profile_pics/${req.file.filename}`
+      ? `/uploads/profile_pics/${req.file.path}`
       : "";
     console.log("--- Register User Debug ---");
     console.log("req.body.role:", req.body.role);
@@ -54,6 +55,7 @@ export const register = async (req, res) => {
       lastName,
       password,
       profilePic: profilePicPath,
+      bio,
       role: role,
     });
     console.log(newUser.profilePic);
@@ -81,6 +83,7 @@ export const register = async (req, res) => {
         firstName: newUser.firstName,
         lastName: newUser.lastName,
         profilePic: newUser.profilePic,
+        bio: newUser.bio,
         role: newUser.role,
       },
       token: token, // Send token back for immediate login
@@ -127,6 +130,7 @@ export const login = (req, res, next) => {
       firstName: user.firstName, // <--- MUST BE INCLUDED
       lastName: user.lastName, // <--- MUST BE INCLUDED
       profilePic: user.profilePic, // <--- MUST BE INCLUDED
+      bio: user.bio,
       role: user.role,
       token: token,
       createdAt: user.createdAt,

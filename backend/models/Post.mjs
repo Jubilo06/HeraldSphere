@@ -33,14 +33,7 @@ const postSchema = new Schema(
       type: Number,
       default: 0,
     },
-    // createdAt: {
-    //   type: Date,
-    //   default: Date.now(),
-    // },
-    // updatedAt: {
-    //   type: Date,
-    //   default: Date.now(),
-    // },
+    
     status: {
       type: String,
       enum: ["draft", "pending", "published", "rejected"],
@@ -48,6 +41,7 @@ const postSchema = new Schema(
     },
     rejectionReason: { type: String, default: "" },
     readingTime: { type: Number, default: 0 },
+    views: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

@@ -14,6 +14,7 @@ function EditProfile() {
     email: user?.email || '',
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
+    bio: user?.bio || '',
     password: '', // Password field is typically left blank and only submitted if user wants to change it
   });
   const [profilePicFile, setProfilePicFile] = useState(null); // For new file upload
@@ -31,11 +32,12 @@ function EditProfile() {
         email: user.email || '',
         firstName: user.firstName || '',
         lastName: user.lastName || '',
+        bio: user.bio || '',
         password: '',
       });
       // setCurrentProfilePicUrl(user.profilePic ? `http://localhost:5014${user.profilePic}` : '');
       const picUrl = user.profilePic 
-        ? (user.profilePic.startsWith('http') ? user.profilePic : `http://localhost:5014${user.profilePic}`)
+        ? (user.profilePic? user.profilePic : `http://localhost:5014${user.profilePic}`)
         : '';
       setCurrentProfilePicUrl(picUrl);
     } else {
@@ -52,8 +54,24 @@ function EditProfile() {
   };
 
   const handleFileChange = (e) => {
-    setProfilePicFile(e.target.files[0]);
-  };
+  const file = e.target.files[0];
+  if (file) {
+    // 10MB in bytes
+    const maxSize = 10 * 1024 * 1024; 
+
+    if (file.size > maxSize) {
+      setError("File is too large! Please select an image under 10MB.");
+      setProfilePicFile(null);
+      setPreviewUrl(null);
+      e.target.value = null; // Reset the input
+      return;
+    }
+
+    setError(null); // Clear any previous errors
+    setProfilePicFile(file);
+    setPreviewUrl(URL.createObjectURL(file)); // Show the preview
+  }
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -76,7 +94,7 @@ function EditProfile() {
     try {
       // Your backend /api/auth/profile PUT endpoint
       const token = localStorage.getItem('token'); // Get token from local storage
-      const response = await axios.put('http://localhost:5014/api/auth/profile', dataToSend, {
+      const response = await axios.put('/api/auth/profile', dataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data', // Important for file uploads
           'Authorization': `Bearer ${token}`, // Send the JWT token
@@ -85,7 +103,7 @@ function EditProfile() {
 
       setSuccess(response.data.message || 'Profile updated successfully!');
       // Update the user context with the new data
-      login(response.data.user, token); // Ensure login updates local storage & context
+      login(response.data.user, token); //  login updates local storage & context
       setProfilePicFile(null); // Clear file input after successful upload
       setFormData(prev => ({ ...prev, password: '' })); // Clear password field for security
       setCurrentProfilePicUrl(response.data.user.profilePic ? `http://localhost:5014${response.data.user.profilePic}` : '');
@@ -102,99 +120,7 @@ function EditProfile() {
   if (loading) return <div className="flex justify-center items-center h-screen">
     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-indigo-600"></div></div>;
   return (
-    // <div className="edit-profile-container h-screen  bg-[url('/editProfile3.webp')] bg-cover bg-center">
-    //   <div className='w-full p-8 rounded bg-white/10 backdrop-blur-lg border border-white/20 shadow-2xl justify-self-center h-screen'>
-    //     <h2 className='text-5xl font-extrabold mb-10 justify-self-center'>Edit your Profile</h2>
-    //   <form onSubmit={handleSubmit} className="edit-profile-form w-[60%]  md:w-[40%]">
-    //     <div className="form-group grid grid-cols-2 gap-0 mb-4">
-    //       <label className=' w-auto p-2' htmlFor="username">Username:</label>
-    //       <input
-    //       className='border border-amber-50 rounded-2xl p-2 ml-2 '
-    //         type="text"
-    //         id="username"
-    //         name="username"
-    //         value={formData.username}
-    //         onChange={handleChange}
-    //         required
-    //       />
-    //     </div>
-    //     <div className="form-group grid grid-cols-2 mb-4">
-    //       <label className=' w-auto p-2' htmlFor="email">Email:</label>
-    //       <input
-    //       className='border border-amber-50 rounded-2xl p-2 ml-2'
-    //         type="email"
-    //         id="email"
-    //         name="email"
-    //         value={formData.email}
-    //         onChange={handleChange}
-    //         required
-    //       />
-    //     </div>
-    //     <div className="form-group grid grid-cols-2 mb-4">
-    //       <label className=' w-auto p-2' htmlFor="firstName">First Name:</label>
-    //       <input
-    //         className='border border-amber-50 rounded-2xl p-2 ml-2'
-    //         type="text"
-    //         id="firstName"
-    //         name="firstName"
-    //         value={formData.firstName}
-    //         onChange={handleChange}
-    //         required
-    //       />
-    //     </div>
-    //     <div className="form-group grid grid-cols-2 mb-4">
-    //       <label className=' w-auto p-2' htmlFor="lastName">Last Name:</label>
-    //       <input
-    //         className='border border-amber-50 rounded-2xl p-2 ml-2'
-    //         type="text"
-    //         id="lastName"
-    //         name="lastName"
-    //         value={formData.lastName}
-    //         onChange={handleChange}
-    //         required
-    //       />
-    //     </div>
-    //     <div className="form-group grid grid-cols-2 mb-4">
-    //       <label className=' w-auto p-2' htmlFor="password">New Password (leave blank to keep current):</label>
-    //       <input
-    //         className='border border-amber-50 rounded-2xl p-2 ml-2'
-    //         type="password"
-    //         id="password"
-    //         name="password"
-    //         value={formData.password}
-    //         onChange={handleChange}
-    //         placeholder="Enter new password"
-    //       />
-    //     </div>
-    //     <div className="form-group grid grid-cols-2 mb-4">
-    //       <label className=' w-auto p-2'>Current Profile Picture:</label>
-    //       {currentProfilePicUrl ? (
-    //         <img src={currentProfilePicUrl} alt="Current Profile" style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover' }} />
-    //       ) : (
-    //         <p className=' w-auto p-2'>No profile picture uploaded.</p>
-    //       )}
-    //     </div>
-    //     <div className="form-group grid grid-cols-2 mb-4">
-    //       <label className=' w-auto p-2'  htmlFor="profilePic">Upload New Profile Picture:</label>
-    //       <input
-    //         type="file"
-    //         id="profilePic"
-    //         name="profilePic"
-    //         accept="image/*"
-    //         onChange={handleFileChange}
-    //       />
-    //     </div>
-
-    //     {error && <p className="error-message">{error}</p>}
-    //     {success && <p className="success-message">{success}</p>}
-    //     <button type="submit" disabled={loading} 
-    //     className="save-profile-button ml-4 border bg-black text-white p-2 rounded hover:cursor-pointer hover:bg-amber-50 hover:text-green-900">
-    //       {loading ? 'Saving...' : 'Save Changes'}
-    //     </button>
-    //   </form>
-    //   </div>
-      
-    // </div>
+    
     <div className="min-h-screen w-full flex items-center justify-center bg-[url('/editProfile3.webp')] bg-cover bg-center py-12 px-4">
       {/* Overlay for readability */}
       <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"></div>
@@ -254,6 +180,24 @@ function EditProfile() {
                   <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest ml-1">Last Name</label>
                   <input name="lastName" value={formData.lastName} onChange={handleChange} required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" />
                 </div>
+              </div>
+
+              {/* BIO FIELD  */}
+              <div className="space-y-2 mt-6">
+                <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-2 ml-1">
+                  Professional Bio
+                </label>
+                <textarea 
+                  name="bio" 
+                  value={formData.bio} 
+                  onChange={handleChange} 
+                  rows="4"
+                  placeholder="Share your expertise and background..."
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all placeholder:text-slate-600 resize-none" 
+                />
+                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter italic">
+                  * This will be visible on your public articles
+                </p>
               </div>
 
               {/* Password */}

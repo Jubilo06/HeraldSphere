@@ -27,8 +27,8 @@ function Login() {
         withCredentials: true // <--- IMPORTANT: Ensure this is set for your login request if your backend relies on cookies.
       }
       );
-      const {  _id, username: loggedInUsername, role, token, profilePic, firstName, lastName, email } = response.data;
-      login({ _id, username: loggedInUsername, role,profilePic, firstName, lastName, email }, token); // Call the login function from AuthContext
+      const {  _id, username: loggedInUsername, role, token,bio, profilePic, firstName, lastName, email } = response.data;
+      login({ _id, username: loggedInUsername, role,profilePic, firstName, lastName,bio, email }, token); // Call the login function from AuthContext
       // Redirect handled by AuthContext
     } catch (err) {
        console.error("Login component: Error caught during login:", err);

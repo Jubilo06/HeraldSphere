@@ -6,18 +6,28 @@ import {
   authenticateJWT,
 } from "../controllers/authController.mjs"; // Adjust path
 import userController from "../controllers/userController.mjs";
-import authorizeRole from "../middlewares/authorizeRole.mjs";
+import path from "path"; // ADD THIS
+import fs from "fs";   // ADD THIS
+import { fileURLToPath } from "url"; // ADD THIS
+import authorizeRole, { loginLimiter } from "../middlewares/authorizeRole.mjs";
+import loginLimit from "../middlewares/authorizeRole.mjs";
 import User from '../models/User.mjs'
 import Post from "../models/Post.mjs";
 import { forgotPassword } from "../controllers/authController.mjs";
 import { resetPassword } from "../controllers/authController.mjs";
+import rateLimit from "express-rate-limit";
 
 const createAuthRouter = (uploadProfilePic) => {
   const router = express.Router();
 
       // router.post("/register", register);
-    router.post("/register", uploadProfilePic.single("profilePic"), register);
-    router.post("/login", login);
+    router.post(
+      "/register",
+      uploadProfilePic.single("profilePic"),
+      register,
+      loginLimiter,
+    );
+    router.post("/login", login, loginLimiter);
 
     router.post("/forgot-password", forgotPassword);
     router.post("/reset-password", resetPassword);
@@ -60,18 +70,22 @@ const createAuthRouter = (uploadProfilePic) => {
       async (req, res) => {
         try {
           const userId = req.user._id; // Get user ID from authenticated request
-          const { username, password, email, firstName, lastName } = req.body; // Allow updating username, password
+          const { username, password, email, bio, firstName, lastName } =
+            req.body; // Allow updating username, password
           console.log("--- Profile Pic Upload Debug ---");
           console.log("req.file:", req.file); // Is Multer receiving the file?
           if (req.file) {
             console.log("req.file.filename:", req.file.filename);
             console.log("req.file.path:", req.file.path);
           }
-          const profilePicPath = req.file
-            ? `/uploads/profile_pics/${req.file.filename}`
-            : undefined; // New profile pic, if uploaded
-          console.log("Calculated profilePicPath:", profilePicPath);
-
+          // const profilePicPath = req.file
+          //   ? `/uploads/profile_pics/${req.file.filename}`
+          //   : undefined; // New profile pic, if uploaded
+          // console.log("Calculated profilePicPath:", profilePicPath);
+          
+          
+          // With Cloudinary, req.file.path IS the full HTTPS URL
+          const profilePicUrl = req.file ? req.file.path : undefined;
 
           const user = await User.findById(userId);
           if (!user) {
@@ -82,21 +96,25 @@ const createAuthRouter = (uploadProfilePic) => {
           if (email) user.email = email;
           if (firstName) user.firstName = firstName;
           if (lastName) user.lastName = lastName;
+          if (bio !== undefined) user.bio = bio;
           if (password) {
             // Password hashing happens automatically via pre-save hook
             user.password = password;
           }
-          if (profilePicPath !== undefined) {
-            // Only update if a new file was uploaded or explicitly cleared
-            if (user.profilePic && user.profilePic !== profilePicPath) {
-              // Check if new pic is different
-              const oldFilePath = path.join(__dirname, "..", user.profilePic);
-              if (fs.existsSync(oldFilePath)) {
-                fs.unlinkSync(oldFilePath);
-                console.log(`Deleted old profile pic: ${oldFilePath}`);
-              }
-            }
-            user.profilePic = profilePicPath;
+          // if (profilePicPath !== undefined) {
+          //   // Only update if a new file was uploaded or explicitly cleared
+          //   if (user.profilePic && user.profilePic !== profilePicPath) {
+          //     // Check if new pic is different
+          //     const oldFilePath = path.join(__dirname, "..", user.profilePic);
+          //     if (fs.existsSync(oldFilePath)) {
+          //       fs.unlinkSync(oldFilePath);
+          //       console.log(`Deleted old profile pic: ${oldFilePath}`);
+          //     }
+          //   }
+          //   user.profilePic = profilePicPath;
+          // }
+          if (profilePicUrl) {
+            user.profilePic = profilePicUrl; // Save the Cloudinary HTTPS URL
           }
           console.log("User object before save, profilePic:", user.profilePic);
           await user.save();
@@ -109,6 +127,7 @@ const createAuthRouter = (uploadProfilePic) => {
               firstName: user.firstName,
               lastName: user.lastName,
               profilePic: user.profilePic,
+              bio: user.bio,
               role: user.role,
               createdAt: user.createdAt,
               updatedAt: user.updatedAt,
@@ -138,6 +157,11 @@ const createAuthRouter = (uploadProfilePic) => {
         res.status(500).json({ message: "Server error while deleting account." });
       }
     });
+    router.put(
+      "/bookmarks/:postId",
+      authenticateJWT,
+      userController.toggleBookmark,
+    );
     // Or directly use the method from controller
     router.get("/secure-data", protectedRoute);
     router.get("/protected-data", authenticateJWT, (req, res) => {

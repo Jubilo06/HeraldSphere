@@ -137,7 +137,11 @@ export const getPostBySlug =async (req, res) => {
     if (!slug || slug === "undefined") {
       return res.status(400).json({ message: "No slug provided" });
     }
-    const post = await Post.findOne({slug: slug}).populate('author', 'username firstName lastName profilePic');
+    const post = await Post.findOneAndUpdate(
+      { slug: slug },
+      { $inc: { views: 1 } },
+      { returnDocument: "after" }, // <--- New way
+    ).populate("author", "username firstName lastName profilePic");
     if (!post) {
       return res.status(404).json({ message: 'Post not found.' });
     }
@@ -151,6 +155,17 @@ export const getPostBySlug =async (req, res) => {
   }
 };
 
+export const getTrendingPosts = async (req, res) => {
+  try {
+    const trending = await Post.find({ status: "published" })
+      .sort({ views: -1 }) // Most views first
+      .limit(5)
+      .select("title slug mainImageUrl createdAt");
+    res.json(trending);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+};
 
 
 //Create a new post
@@ -409,6 +424,22 @@ export const createComment = async (req, res) => {
       comment,
     });
     await newComment.save();
+
+    // IF THIS IS A REPLY, NOTIFY THE PARENT
+    if (parentId) {
+      const parentComment = await Comment.findById(parentId);
+      if (parentComment && parentComment.email !== email) {
+        // Brevo Logic
+        const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+        await apiInstance.sendTransacEmail({
+          sender: { name: "Herald Sphere", email: process.env.SENDER_EMAIL },
+          to: [{ email: parentComment.email }],
+          subject: `${name} replied to your transmission`,
+          htmlContent: `<p>Hi ${parentComment.name},</p><p>${name} just replied to your comment: "<em>${comment}</em>"</p><a href="http://localhost:5173/posts/${id}">View Discussion</a>`,
+        });
+      }
+    }
+
     res.status(201).json(newComment);
   } catch (error) {
     res.status(500).json({ message: "Error posting comment" });
@@ -518,7 +549,7 @@ export const updatePostStatus = async (req, res) => {
     const post = await Post.findByIdAndUpdate(
       id,
       { status, rejectionReason: reason || "" },
-      { new: true },
+      { returnDocument: "after" }, // <--- New way
     );
     res.json({ message: `Status updated to ${status}`, post });
   } catch (error) {
@@ -584,9 +615,9 @@ const postController = {
   createComment,
   getSitemap,
   migrateSlugs,
-  getSearchSuggestions, 
-  runFullMigration
-
+  getSearchSuggestions,
+  runFullMigration,
+  getTrendingPosts,
 };
 
 export default postController;

@@ -16,6 +16,8 @@ router.get('/', postController.getAllPosts);
 
 router.post("/contact", postController.handleContactForm);
 
+router.get("/trending", postController.getTrendingPosts);
+
 // GET a single post by ID
 router.get('/:slug', postController.getPostBySlug);
 

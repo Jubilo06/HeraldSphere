@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from './Api';
 import { 
   FaHeart, FaRegHeart, FaTwitter, FaLinkedinIn, 
   FaChevronLeft, FaReply, FaLink, FaCheck, 
-  FaWhatsapp, FaTelegramPlane, FaInstagram 
+  FaWhatsapp, FaTelegramPlane, FaInstagram, FaBookmark, FaRegBookmark, FaFire  
 } from 'react-icons/fa';
 import DOMPurify from 'dompurify';
 import { Helmet } from 'react-helmet-async';
+import { AuthContext } from './AuthContext';
 import { ReadingProgress } from './ReadingProgress';
 
 // --- SUB-COMPONENT: COMMENT ITEM ---
@@ -62,7 +63,10 @@ function PublicPostDetail() {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [replyingTo, setReplyingTo] = useState(null);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [trending, setTrending] = useState([]);
   const [commentForm, setCommentForm] = useState({ name: '', email: '', comment: '', parentId: null });
+  const { user, isAuthenticated, isLoading } = useContext(AuthContext); // Get user from context
 
   useEffect(() => {
     if (slug && slug !== 'undefined') {
@@ -93,19 +97,125 @@ function PublicPostDetail() {
     }
   };
 
+  
+  useEffect(() => {
+    // Load Trending sidebar data
+    api.get('/api/posts/trending').then(res => setTrending(res.data));
+  }, []);
+
+    useEffect(() => {
+    if (post && user) {
+      setIsBookmarked(user.bookmarks?.includes(post._id));
+    }
+  }, [post, user]);
+
+
+  const handleBookmark = async () => {
+    if (!user) return alert("Log in to save this dispatch.");
+    setIsBookmarked(!isBookmarked); // Optimistic UI
+    await api.put(`/api/auth/bookmarks/${post._id}`);
+  };
+
+   const getImageUrl = (url) => {
+    if (!url) return '/logo.webp';
+    if (url.startsWith('http')) return url; // Cloudinary or external
+    return `http://localhost:5014${url.startsWith('/') ? '' : '/'}${url}`; // Local fallback
+  };
+
+  // --- SCHEMA MARKUP (JSON-LD) ---
+  const schemaMarkup = useMemo(() => {
+    if (!post) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": post.title,
+      "description": post.summary || post.content.substring(0, 160).replace(/<[^>]*>?/gm, ''),
+      "image": getImageUrl(post.mainImageUrl),
+      "author": {
+        "@type": "Person",
+        "name": `${post.author?.firstName || 'Herald'} ${post.author?.lastName || 'Staff'}`,
+        "image": getImageUrl(post.author?.profilePic)
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Herald Sphere",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://heraldsphere.com/logo.webp" // Replace with your real live logo URL
+        }
+      },
+      "datePublished": post.createdAt,
+      "dateModified": post.updatedAt,
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": `https://heraldsphere.com/post/${post.slug}`
+      }
+    };
+  }, [post]);
+
   // 1. Process the content to inject IDs into H2 and H3 tags
+  // const processedContent = useMemo(() => {
+  //   if (!post?.content) return "";
+  //   const parser = new DOMParser();
+  //   const doc = parser.parseFromString(post.content, 'text/html');
+
+  //   // 1. Fix Inline Images (The "Manual" part)
+  // const images = doc.querySelectorAll('img');
+  // images.forEach((img) => {
+  //   const src = img.getAttribute('src');
+  //   if (src && !src.startsWith('http')) {
+  //     // If it's a relative path (/uploads/...), prepend the backend URL
+  //     const fixedSrc = `http://localhost:5014${src.startsWith('/') ? '' : '/'}${src}`;
+  //     img.setAttribute('src', fixedSrc);
+  //   }
+  //   // Optimization: Add loading="lazy" for SEO/Performance
+  //   img.setAttribute('loading', 'lazy');
+  // });
+
+  //   const headings = doc.querySelectorAll('h2, h3');
+  //   headings.forEach((h, index) => {
+  //     const cleanText = h.innerText || "";
+  //     const id = cleanText.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-') + '-' + index;
+  //     h.setAttribute('id', id);
+  //   });
+  //   return doc.body.innerHTML;
+  // }, [post?.content]);
+
   const processedContent = useMemo(() => {
-    if (!post?.content) return "";
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(post.content, 'text/html');
-    const headings = doc.querySelectorAll('h2, h3');
-    headings.forEach((h, index) => {
-      const cleanText = h.innerText || "";
-      const id = cleanText.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-') + '-' + index;
-      h.setAttribute('id', id);
-    });
-    return doc.body.innerHTML;
-  }, [post?.content]);
+  if (!post?.content) return "";
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(post.content, 'text/html');
+
+  // 1. Fix Inline Images
+  const images = doc.querySelectorAll('img');
+  images.forEach((img) => {
+    const src = img.getAttribute('src');
+    
+    if (src) {
+      // Skip if it's already a full URL (Cloudinary) OR if it's a base64 string (drag-and-drop)
+      if (!src.startsWith('http') && !src.startsWith('data:')) {
+        const baseUrl = 'http://localhost:5014';
+        const fixedSrc = `${baseUrl}${src.startsWith('/') ? '' : '/'}${src}`;
+        img.setAttribute('src', fixedSrc);
+      }
+    }
+    
+    // SEO & Performance Optimization: Lazy loading
+    img.setAttribute('loading', 'lazy');
+    img.setAttribute('class', 'max-w-full h-auto rounded-lg shadow-sm');
+  });
+
+  // 2. Fix Headings for TOC
+  const headings = doc.querySelectorAll('h2, h3');
+  headings.forEach((h, index) => {
+    const cleanText = h.innerText || "";
+    const id = cleanText.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-') + '-' + index;
+    h.setAttribute('id', id);
+  });
+
+  return doc.body.innerHTML;
+}, [post?.content]);
 
   // 2. Map Headings for Table of Contents
   const toc = useMemo(() => {
@@ -168,6 +278,24 @@ function PublicPostDetail() {
       <Helmet>
         <title>{post.title} | Herald Sphere</title>
         <meta name="description" content={post.content.substring(0, 160).replace(/<[^>]*>?/gm, '')} />
+        <link rel="canonical" href={`https://heraldsphere.com/post/${post.slug}`} />
+        
+        {/* Open Graph (Facebook/LinkedIn) */}
+        <meta property="og:title" content={post.title} />
+        <meta property="og:image" content={post.mainImageUrl} />
+        <meta property="og:url" content={`https://heraldsphere.com/post/${post.slug}`} />
+         <meta property="og:type" content="article" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={post.title} />
+
+        {/* Schema Markup Injection */}
+        {schemaMarkup && (
+          <script type="application/ld+json">
+            {JSON.stringify(schemaMarkup)}
+          </script>
+        )}
       </Helmet>
 
       {/* HEADER: Ultra Tight */}
@@ -177,7 +305,12 @@ function PublicPostDetail() {
           <span className="text-[9px] font-black text-indigo-600 uppercase bg-indigo-50 px-2 py-0.5 rounded">{post.category}</span>
           <h1 className="text-2xl md:text-4xl lg:text-5xl font-black leading-tight mt-1 tracking-tighter text-slate-900">{post.title}</h1>
           <div className="flex items-center gap-3 text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest">
-             <img src={post.author?.profilePic ? `http://localhost:5014${post.author.profilePic}` : '/logo.webp'} className="w-5 h-5 rounded-full object-cover border border-slate-200" alt="" />
+             {/* <img src={post.author?.profilePic ? `http://localhost:5014${post.author.profilePic}` : '/logo.webp'} className="w-5 h-5 rounded-full object-cover border border-slate-200" alt="" /> */}
+             <img 
+                src={getImageUrl(post.author?.profilePic)} 
+                className="w-5 h-5 rounded-full object-cover border border-slate-200" 
+                alt={`${post.author?.firstName} profile`} 
+             />
              <span>{post.author?.firstName} {post.author?.lastName} • {new Date(post.createdAt).toLocaleDateString()}</span>
           </div>
         </div>
@@ -203,9 +336,16 @@ function PublicPostDetail() {
 
         {/* CENTER COLUMN: ARTICLE & COMMENTS */}
         <main className="lg:col-span-7 flex flex-col items-start min-h-0">
-          {post.mainImageUrl && (
+          {/* {post.mainImageUrl && (
              <img src={post.mainImageUrl.startsWith('http') ? post.mainImageUrl : `http://localhost:5014${post.mainImageUrl}`} 
                   className="w-full h-auto rounded-xl mb-4 shadow-sm" alt="" />
+          )} */}
+          {post.mainImageUrl && (
+             <img 
+                src={getImageUrl(post.mainImageUrl)} 
+                className="w-full h-auto rounded-xl mb-4 shadow-sm" 
+                alt={post.title} 
+             />
           )}
 
           {/* INTERACTION ROW */}
@@ -223,6 +363,11 @@ function PublicPostDetail() {
               </button>
             </div>
           </div>
+
+          <button onClick={handleBookmark} className="flex items-center gap-2 text-indigo-600 font-black text-[10px] uppercase">
+          {isBookmarked ? <FaBookmark /> : <FaRegBookmark />} 
+          {isBookmarked ? 'Saved to Library' : 'Save for later'}
+        </button>
 
           {/* ARTICLE CONTENT */}
           <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed mb-0 w-full">
@@ -258,18 +403,37 @@ function PublicPostDetail() {
 
         {/* RIGHT COLUMN: SIDEBAR */}
         <aside className="lg:col-span-3 flex flex-col gap-6">
+          {/* TRENDING NOW SECTION */}
+    <div className="px-1 border-t border-slate-100 pt-6">
+      <h5 className="text-[9px] font-black uppercase text-slate-400 mb-6 flex items-center gap-2">
+        <FaFire className="text-orange-500" /> Trending Now
+      </h5>
+      <div className="space-y-6">
+        {trending.map((t, index) => (
+          <Link key={t._id} to={`/posts/${t.slug}`} className="group flex gap-3 items-start">
+            <span className="text-xl font-black text-slate-100 group-hover:text-indigo-100 transition-colors">0{index + 1}</span>
+            <div className="min-w-0">
+               <h4 className="text-[11px] font-bold text-slate-900 group-hover:text-indigo-600 leading-tight line-clamp-2">{t.title}</h4>
+               <p className="text-[8px] text-slate-400 uppercase mt-1">{new Date(t.createdAt).toLocaleDateString()}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 shrink-0">
             <p className="text-[8px] font-black uppercase text-indigo-600 mb-3 underline underline-offset-4">Author</p>
             <div className="flex items-center gap-3">
-              <img src={post.author?.profilePic ? `http://localhost:5014${post.author.profilePic}` : '/logo.webp'} className="w-10 h-10 rounded-xl object-cover border-2 border-white shadow-sm" alt="" />
+              {/* <img src={post.author?.profilePic ? `http://localhost:5014${post.author.profilePic}` : '/logo.webp'} className="w-10 h-10 rounded-xl object-cover border-2 border-white shadow-sm" alt="" /> */}
+              <img src={getImageUrl(post.author?.profilePic)} className="w-10 h-10 rounded-xl object-cover border-2 border-white shadow-sm" alt="" />
               <div className="min-w-0 flex-1">
                 <h4 className="font-black text-xs text-slate-900 uppercase truncate leading-none">{post.author?.firstName} {post.author?.lastName}</h4>
-                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter mt-1">Herald Staff</p>
+                {/* BIO DISPLAY */}
+                <p className="text-[9px] text-slate-500 line-clamp-2 mt-1 italic">{post.author?.bio || 'Herald Sphere Contributor'}</p>
               </div>
             </div>
           </div>
 
-          <div className="px-1 shrink-0">
+          <div className="px-1 shrink-0  mb-10">
             <h5 className="text-[9px] font-black uppercase text-slate-400 mb-3 tracking-widest text-center lg:text-left">Related Articles</h5>
             <div className="space-y-3">
               {relatedPosts && relatedPosts.length > 0 ? (

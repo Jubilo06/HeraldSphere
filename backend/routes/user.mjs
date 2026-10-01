@@ -3,6 +3,8 @@ import passport from "passport";
 import jwt from "jsonwebtoken";
 import User from "../models/User.mjs";
 import Post from "../models/Post.mjs";
+import userController from "../controllers/userController.mjs";
+
 
 const router = express.Router();
 const ensureAuthenticated = passport.authenticate("jwt", { session: false });
@@ -88,5 +90,7 @@ router.delete("/api/me", ensureAuthenticated, async (req, res) => {
     res.status(500).json({ message: "Server error while deleting account." });
   }
 });
+
+
 
 export default router;

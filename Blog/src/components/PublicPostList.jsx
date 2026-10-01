@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import GlobalSearch from './GlobalSearch';
+import { SkeletonPost } from './SkeletonPost';
 
 function PublicPostList() {
   const [posts, setPosts] = useState([]);
@@ -62,14 +63,24 @@ function PublicPostList() {
   return `${minutes} min read`;
 };
 
-  if (loading) return <div className="flex justify-center items-center h-screen">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-indigo-600"></div></div>;
+  // if (loading) return <div className="flex justify-center items-center h-screen">
+  //   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-indigo-600"></div></div>;
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="h-10 w-48 bg-slate-100 rounded mb-10 animate-pulse"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {[...Array(6)].map((_, i) => <SkeletonPost key={i} />)}
+        </div>
+      </div>
+    );
+  }
   
   if (error) return <div>Error: {error}</div>;
   if (posts.length === 0) return 
 
   return (
-    <div className='w-full'>
+    <div className='w-full mt-10'>
       <GlobalSearch />
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
   {/* SECTION HEADER */}

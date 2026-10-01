@@ -10,9 +10,11 @@ const userSchema = new mongoose.Schema(
     lastName: { type: String, required: true }, // New
     password: { type: String, required: true },
     profilePic: { type: String, default: "" }, // New: Store URL or path to the image
+    bio: { type: String, default: "" },
     role: { type: String, enum: ["writer", "admin"], default: "writer" },
     resetPasswordToken: String,
     resetPasswordExpires: Date,
+    bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
   },
   { timestamps: true },
 );

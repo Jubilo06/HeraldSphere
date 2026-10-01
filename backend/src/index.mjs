@@ -10,6 +10,8 @@ import authRoutes from "../routes/auth.mjs";
 import postRoutes from "../routes/post.mjs";
 import contactRoutes from "../routes/contact.mjs";
 import multer from 'multer';
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 import fs from 'fs'; // Node.js built-in file system module
 import path from "path";
 import { fileURLToPath } from "url";
@@ -26,7 +28,11 @@ const app = express();
 // initializePassport(passport); 
 app.use(passport.initialize());
 mongoose
-  .connect(process.env.MONGO_URL)
+  .connect(process.env.MONGO_URL, {
+    maxPoolSize: 50, // Maintain up to 50 socket connections
+    serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds instead of 30
+    socketTimeoutMS: 45000,
+  })
   .then(() => console.log("connected to Mongo atlas"))
   .catch((err) => console.log(`Error:${err}`));
 
@@ -51,7 +57,11 @@ app.use(cookieParser());
 
 configurePassport(passport);
 
-
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 const uploadDir = path.join(__dirname, "uploads");
 
 const profilePicUploadDir = path.join(uploadDir, "profile_pics");
@@ -61,73 +71,114 @@ if (!fs.existsSync(uploadDir)) {
 }
 if (!fs.existsSync(profilePicUploadDir)) fs.mkdirSync(profilePicUploadDir);
 if (!fs.existsSync(postImageUploadDir)) fs.mkdirSync(postImageUploadDir);
-const postImageStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, postImageUploadDir); // Store post images here
-  },
-  filename: (req, file, cb) => {
-    cb(null, `post-${Date.now()}-${file.originalname}`);
-  },
-});
-
-const uploadPostImage = multer({
-  storage: postImageStorage,
-  limits: { fileSize: 1024 * 1024 * 10 }, // e.g., 10MB limit for post images
-  fileFilter: (req, file, cb) => {
-    const filetypes = /jpeg|jpg|png|gif/;
-    const extname = filetypes.test(
-      path.extname(file.originalname).toLowerCase(),
-    );
-    const mimetype = filetypes.test(file.mimetype);
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error("Only image files are allowed!"), false);
-    }
+// const postImageStorage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, postImageUploadDir); // Store post images here
+//   },
+//   filename: (req, file, cb) => {
+//     cb(null, `post-${Date.now()}-${file.originalname}`);
+//   },
+// });
+// 2. Setup Storage for Post Images
+const postImageStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'post_images',
+    format: async (req, file) => 'webp', // Force WebP conversion
+    public_id: (req, file) => `post-${Date.now()}`,
+    transformation: [{ quality: 'auto', fetch_format: 'auto' }] // Auto optimize quality
   },
 });
 
-const profilePicStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, profilePicUploadDir); // Store profile pictures here
-  },
-  filename: (req, file, cb) => {
-    cb(null, `profile-${Date.now()}-${file.originalname}`);
+// const uploadPostImage = multer({
+//   storage: postImageStorage,
+//   limits: { fileSize: 1024 * 1024 * 10 }, // e.g., 10MB limit for post images
+//   fileFilter: (req, file, cb) => {
+//     const filetypes = /jpeg|jpg|png|gif/;
+//     const extname = filetypes.test(
+//       path.extname(file.originalname).toLowerCase(),
+//     );
+//     const mimetype = filetypes.test(file.mimetype);
+//     if (mimetype && extname) {
+//       return cb(null, true);
+//     } else {
+//       cb(new Error("Only image files are allowed!"), false);
+//     }
+//   },
+// });
+
+// const profilePicStorage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, profilePicUploadDir); // Store profile pictures here
+//   },
+//   filename: (req, file, cb) => {
+//     cb(null, `profile-${Date.now()}-${file.originalname}`);
+//   },
+// });
+// 1. Setup Storage for Profile Pictures
+const profilePicStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'profile_pics',
+    format: async (req, file) => 'webp', // Force WebP conversion
+    public_id: (req, file) => `profile-${Date.now()}`,
+    transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }] // Auto-crop to face for profile pics
   },
 });
 
-export const uploadProfilePic = multer({
-  storage: profilePicStorage,
-  limits: { fileSize: 1024 * 1024 * 5 }, // e.g., 5MB limit for profile pics
-  fileFilter: (req, file, cb) => {
-    const filetypes = /jpeg|jpg|png|gif/;
-    const extname = filetypes.test(
-      path.extname(file.originalname).toLowerCase(),
-    );
-    const mimetype = filetypes.test(file.mimetype);
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error("Only image files are allowed!"), false);
-    }
-  },
-});
+// export const uploadProfilePic = multer({
+//   storage: profilePicStorage,
+//   limits: { fileSize: 1024 * 1024 * 10 }, // e.g., 5MB limit for profile pics
+//   fileFilter: (req, file, cb) => {
+//     const filetypes = /jpeg|jpg|png|gif/;
+//     const extname = filetypes.test(
+//       path.extname(file.originalname).toLowerCase(),
+//     );
+//     const mimetype = filetypes.test(file.mimetype);
+//     if (mimetype && extname) {
+//       return cb(null, true);
+//     } else {
+//       cb(new Error("Only image files are allowed!"), false);
+//     }
+//   },
+// });
+
+// Initialize Multer instances
+export const uploadProfilePic = multer({ storage: profilePicStorage });
+const uploadPostImage = multer({ storage: postImageStorage });
 
 // app.use("/uploads", express.static(uploadDir));
 app.use("/uploads", express.static(uploadDir));
+// app.post(
+//   "/api/upload-image", // This is for post images, consider renaming to /api/upload-post-image
+//   authenticateJWT,
+//   uploadPostImage.single("image"), // Use the post image specific uploader
+//   (req, res) => {
+//      console.log("Upload route reached. User:", req.user);
+//     if (!req.file) {
+//       return res.status(400).json({ message: "No file uploaded." });
+//     }
+//     const imageUrl = `http://localhost:5014/uploads/post_images/${req.file.filename}`; // Path reflects new subfolder
+//     res.status(200).json({
+//       message: "Image uploaded successfully!",
+//       imageUrl: imageUrl,
+//     });
+//   },
+// );
+
 app.post(
-  "/api/upload-image", // This is for post images, consider renaming to /api/upload-post-image
+  "/api/upload-image",
   authenticateJWT,
-  uploadPostImage.single("image"), // Use the post image specific uploader
+  uploadPostImage.single("image"),
   (req, res) => {
-     console.log("Upload route reached. User:", req.user);
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded." });
     }
-    const imageUrl = `http://localhost:5014/uploads/post_images/${req.file.filename}`; // Path reflects new subfolder
+
+    // Cloudinary provides the optimized WebP URL here:
     res.status(200).json({
       message: "Image uploaded successfully!",
-      imageUrl: imageUrl,
+      imageUrl: req.file.path, // This is now a https://res.cloudinary.com/... URL
     });
   },
 );

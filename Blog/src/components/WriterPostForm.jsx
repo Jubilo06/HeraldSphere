@@ -2,12 +2,21 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import ReactDOM from 'react-dom';
-import ReactQuill from 'react-quill-new';
+import imageCompression from 'browser-image-compression';
+import ReactQuill, { Quill }  from 'react-quill-new';
+// import ImageResize from 'quill-image-resize-module'; 
+import BlotFormatter from 'quill-blot-formatter'; 
 import 'react-quill-new/dist/quill.snow.css';
+// if (typeof window !== 'undefined') {
+  // window.Quill = Quill;
+  // Quill.register('modules/imageResize', ImageResize);
+// }
 import { AuthContext } from './AuthContext';
 import axios from 'axios'; // Ensure axios is imported for direct calls like image upload
 import api from './Api'; // Use your configured axios instance for post CRUD
 import '../App.css'
+
+Quill.register('modules/blotFormatter', BlotFormatter);
 
 function WriterPostForm() {
   const { id } = useParams(); // Get ID from URL for editing
@@ -182,7 +191,13 @@ useEffect(() => {
         ['clean']
       ],
       handlers: {
-        image: async function () {
+        image:  function () {
+          const quill = this.quill;
+
+          // We use the 'true' argument to force focus if possible
+          const range = quill.getSelection(true);
+          // const savedIndex = range ? range.index : quill.getLength(); 
+           const index = range ? range.index : quill.getLength();
           const input = document.createElement('input');
           input.setAttribute('type', 'file');
           input.setAttribute('accept', 'image/*');
@@ -191,35 +206,72 @@ useEffect(() => {
           input.onchange = async () => {
             const file = input.files[0];
             if (file) {
-              const formData = new FormData();
-              formData.append('image', file);
+              setError(null);
+              // setLoading(true);
+
+              // COMPRESSION LOGIC
+            const options = {
+              maxSizeMB: 1,          // Max 1MB
+              maxWidthOrHeight: 1920, // Resize if larger
+              useWebWorker: true
+            };
+
+              // const formData = new FormData();
+              // formData.append('image', file);
               const token = localStorage.getItem('token');
               if (!token) {
                   setError('Not authenticated. Please log in to upload images.');
                   return; // Don't even try to upload
               }
+              
               try {
-                // Use axios directly for image upload, as it's a specific endpoint
-                const response = await api.post('http://localhost:5014/api/upload-image', formData, {
-                  headers: { 'Content-Type': 'multipart/form-data', 
-                    'Authorization': `Bearer ${token}`
-                     },
-                  withCredentials: true, // If your image upload endpoint requires credentials
-                });
+            const compressedFile = await imageCompression(file, options);
+            const formData = new FormData();
+            formData.append('image', compressedFile);
 
-                const imageUrl = response.data.imageUrl;
-                const quill = this.quill;
-                const range = quill.getSelection();
-                quill.insertEmbed(range.index, 'image', imageUrl, 'user'); // Add 'user' source
-              } catch (uploadError) {
-                console.error('Image upload failed:', uploadError);
-                setError('Image upload failed. Please try again.'); // Set error state
-              }
+            const response = await api.post('/api/upload-image', formData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+              timeout: 60000 // 1 minute
+            });
+
+            const imageUrl = response.data.imageUrl;
+
+            // 2. IMPORTANT: Wake up the editor first
+      // quill.focus();
+            // --- THE DELTA FIX ---
+      // Instead of insertEmbed (which triggers selection logic), we update the content directly.
+      // This tells Quill: "Go to position X, and insert an image."
+      quill.updateContents({
+        ops: [
+          { retain: index },       // Skip to the correct position
+          { insert: { image: imageUrl } } // Insert the image blot
+        ]
+      }, 'user'); // 'user' source tracks this as a user change
+
+            
+      setTimeout(() => {
+        try {
+          quill.focus();
+          quill.setSelection(index + 1,0, 'silent');
+        } catch (err) {
+          console.warn("Handled addRange error: Selection could not be restored, but image was saved.");
+        }
+      }, 100);
+
+          } catch (err) {
+            console.error(err);
+
+            if (typeof setError === 'function') {
+              setError('Image upload failed. The file might be too large or the server is unreachable.');
+            }
+          } 
             }
           };
         },
       },
     },
+
+      blotFormatter: {}, 
     clipboard: {
       matchVisual: false,
     },
@@ -246,6 +298,7 @@ useEffect(() => {
       try {
         const response = await api.post('/api/upload-image', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 120000,
           withCredentials: true,
         });
         finalMainImageUrl = response.data.imageUrl;

@@ -64,9 +64,10 @@ export default function (passport) {
             _id: user._id,
             username: user.username,
             role: user.role,
-            profilePic: user.profilePic, 
-            firstName: user.firstName, 
-            lastName: user.lastName, 
+            profilePic: user.profilePic,
+            firstName: user.firstName,
+            bio: user.bio,
+            lastName: user.lastName,
           });
         } else {
           console.log(

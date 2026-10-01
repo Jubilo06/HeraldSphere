@@ -39,21 +39,36 @@ export const getUserById = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   try {
-    const { username, role, password } = req.body;
+    const { username, email, firstName, lastName, bio, role, password } =
+      req.body;
     const user = await User.findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
-
-    user.username = username || user.username;
+    user.username = username ?? user.username;
+    user.email = email ?? user.email;
+    user.firstName = firstName ?? user.firstName;
+    user.lastName = lastName ?? user.lastName;
+    user.role = role ?? user.role;
+    // user.username = username || user.username;
     // user.email = email || user.email; // Assuming you have an email field
-    user.role = role || user.role;
-
-    if (password) {
-      // Hash new password if provided
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(password, salt);
+    // user.role = role || user.role;
+    if (bio !== undefined) {
+      user.bio = bio;
+    }
+    if (req.file) {
+      // user.profilePic = `/uploads/profile_pics/${req.file.path}`;
+      user.profilePic = req.file.path; // Cloudinary URL
+    }
+    // if (password) {
+    //   // Hash new password if provided
+    //   const salt = await bcrypt.genSalt(10);
+    //   user.password = await bcrypt.hash(password, salt);
+    // }
+    if (password && password.trim() !== "") {
+      // NOTE: do NOT hash here — your userSchema.pre("save") hook already hashes.
+      user.password = password;
     }
 
     await user.save();
@@ -67,7 +82,7 @@ export const updateUser = async (req, res) => {
       // Duplicate key error
       return res
         .status(409)
-        .json({ message: "Username" });
+        .json({ message: "Credential already exists" });
     }
     if (error.name === "ValidationError") {
       return res
@@ -91,11 +106,29 @@ export const deleteUser = async (req, res) => {
   }
 };
 
+export const toggleBookmark = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    const index = user.bookmarks.indexOf(req.params.postId);
+
+    if (index > -1)
+      user.bookmarks.splice(index, 1); // Remove
+    else user.bookmarks.push(req.params.postId); // Add
+
+    await user.save();
+    res.json({ bookmarks: user.bookmarks });
+  } catch (err) {
+    res.status(500).json(err);
+  }
+};
+
+
 const userController = {
   getAllUsers,
   getUserById,
   updateUser,
   deleteUser,
+  toggleBookmark,
 };
 
 export default userController;
