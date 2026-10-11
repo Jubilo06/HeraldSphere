@@ -51,8 +51,8 @@ app.use(
   }),
 );
 
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
+app.use(express.json({ limit: "25mb" }));
+app.use(express.urlencoded({ limit: "25mb", extended: true }));
 app.use(cookieParser());
 
 configurePassport(passport);
@@ -71,14 +71,7 @@ if (!fs.existsSync(uploadDir)) {
 }
 if (!fs.existsSync(profilePicUploadDir)) fs.mkdirSync(profilePicUploadDir);
 if (!fs.existsSync(postImageUploadDir)) fs.mkdirSync(postImageUploadDir);
-// const postImageStorage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, postImageUploadDir); // Store post images here
-//   },
-//   filename: (req, file, cb) => {
-//     cb(null, `post-${Date.now()}-${file.originalname}`);
-//   },
-// });
+
 // 2. Setup Storage for Post Images
 const postImageStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -90,31 +83,7 @@ const postImageStorage = new CloudinaryStorage({
   },
 });
 
-// const uploadPostImage = multer({
-//   storage: postImageStorage,
-//   limits: { fileSize: 1024 * 1024 * 10 }, // e.g., 10MB limit for post images
-//   fileFilter: (req, file, cb) => {
-//     const filetypes = /jpeg|jpg|png|gif/;
-//     const extname = filetypes.test(
-//       path.extname(file.originalname).toLowerCase(),
-//     );
-//     const mimetype = filetypes.test(file.mimetype);
-//     if (mimetype && extname) {
-//       return cb(null, true);
-//     } else {
-//       cb(new Error("Only image files are allowed!"), false);
-//     }
-//   },
-// });
 
-// const profilePicStorage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, profilePicUploadDir); // Store profile pictures here
-//   },
-//   filename: (req, file, cb) => {
-//     cb(null, `profile-${Date.now()}-${file.originalname}`);
-//   },
-// });
 // 1. Setup Storage for Profile Pictures
 const profilePicStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -126,45 +95,17 @@ const profilePicStorage = new CloudinaryStorage({
   },
 });
 
-// export const uploadProfilePic = multer({
-//   storage: profilePicStorage,
-//   limits: { fileSize: 1024 * 1024 * 10 }, // e.g., 5MB limit for profile pics
-//   fileFilter: (req, file, cb) => {
-//     const filetypes = /jpeg|jpg|png|gif/;
-//     const extname = filetypes.test(
-//       path.extname(file.originalname).toLowerCase(),
-//     );
-//     const mimetype = filetypes.test(file.mimetype);
-//     if (mimetype && extname) {
-//       return cb(null, true);
-//     } else {
-//       cb(new Error("Only image files are allowed!"), false);
-//     }
-//   },
-// });
+
 
 // Initialize Multer instances
-export const uploadProfilePic = multer({ storage: profilePicStorage });
-const uploadPostImage = multer({ storage: postImageStorage });
+export const uploadProfilePic = multer({
+  storage: profilePicStorage,
+  limits: { fileSize: 20 * 1024 * 1024 },
+});
+const uploadPostImage = multer({ storage: postImageStorage, limits: { fileSize: 20 * 1024 * 1024 }});
 
-// app.use("/uploads", express.static(uploadDir));
 app.use("/uploads", express.static(uploadDir));
-// app.post(
-//   "/api/upload-image", // This is for post images, consider renaming to /api/upload-post-image
-//   authenticateJWT,
-//   uploadPostImage.single("image"), // Use the post image specific uploader
-//   (req, res) => {
-//      console.log("Upload route reached. User:", req.user);
-//     if (!req.file) {
-//       return res.status(400).json({ message: "No file uploaded." });
-//     }
-//     const imageUrl = `http://localhost:5014/uploads/post_images/${req.file.filename}`; // Path reflects new subfolder
-//     res.status(200).json({
-//       message: "Image uploaded successfully!",
-//       imageUrl: imageUrl,
-//     });
-//   },
-// );
+
 
 app.post(
   "/api/upload-image",
@@ -207,15 +148,25 @@ app.get("/api/protected", authenticateJWT, (req, res) => {
   });
 });
 
-// --- Error Handling Middleware (Optional but recommended) ---
 app.use((err, req, res, next) => {
-  console.error('Unhandled Server Error:', err.stack);
+  console.error("--- BACKEND ERROR LOG ---");
+  
+  // Handle Multer specifically
   if (err instanceof multer.MulterError) {
-    return res
-      .status(400)
-      .json({ message: `Multer Upload Error: ${err.message}` });
+    console.error(`Multer Error: ${err.message}`);
+    return res.status(400).json({ 
+      message: err.code === 'LIMIT_FILE_SIZE' 
+        ? "The image file is too large. Please upload an image under 20MB." 
+        : `Upload Error: ${err.message}` 
+    });
   }
-  res.status(500).json({ message: 'Something broke!', error: err.message });
+
+  if (err) {
+    console.error('Message:', err.message);
+    return res.status(500).json({ message: "Server Error", error: err.message });
+  }
+
+  next();
 });
 
 const PORT = process.env.PORT || 5014;

@@ -1,22 +1,20 @@
 // src/components/PostForm.jsx
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import ReactDOM from 'react-dom';
 import imageCompression from 'browser-image-compression';
 import ReactQuill, { Quill }  from 'react-quill-new';
 // import ImageResize from 'quill-image-resize-module'; 
-import BlotFormatter from 'quill-blot-formatter'; 
+import BlotFormatter from 'quill-blot-formatter-2'; 
 import 'react-quill-new/dist/quill.snow.css';
-// if (typeof window !== 'undefined') {
-  // window.Quill = Quill;
-  // Quill.register('modules/imageResize', ImageResize);
-// }
 import { AuthContext } from './AuthContext';
 import axios from 'axios'; // Ensure axios is imported for direct calls like image upload
 import api from './Api'; // Use your configured axios instance for post CRUD
 import '../App.css'
 
-Quill.register('modules/blotFormatter', BlotFormatter);
+// Quill.register('modules/blotFormatter', BlotFormatter);
+const Formatter = BlotFormatter.default || BlotFormatter;
+Quill.register('modules/blotFormatter', Formatter);
 
 function WriterPostForm() {
   const { id } = useParams(); // Get ID from URL for editing
@@ -32,6 +30,9 @@ const [mainImageFile, setMainImageFile] = useState(null); // For the actual file
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false); // For form submission and initial fetch
   const [error, setError] = useState(null);
+  const [showDraftModal, setShowDraftModal] = useState(false);
+const [tempDraft, setTempDraft] = useState(null);
+const hasCheckedDraft = useRef(false); // Prevents the double-check
 
   const categories = ['Science', 'Business', 'Technology', 'Health', 'Sports', 'Opinion', 'Other'];
   const isEditMode = !!id; // True if 'id' param exists
@@ -98,27 +99,22 @@ useEffect(() => {
 }, []);
 
   useEffect(() => {
-    if (!isEditMode && !isLoading) {
-      const savedDraft = localStorage.getItem('herald_sphere_draft');
-      if (savedDraft) {
-        try {
-          const { dTitle, dContent, dCategory, dCustom } = JSON.parse(savedDraft);
-          // Only offer restore if there's actual content
-          if (dTitle || dContent) {
-            if (window.confirm("Found an unsaved draft. Would you like to restore it?")) {
-              setTitle(dTitle || '');
-              setContent(dContent || '');
-              setCategory(dCategory || '');
-              setCustomCategory(dCustom || '');
-            } else {
-              localStorage.removeItem('herald_sphere_draft');
-            }
-          }
-        } catch (e) {
-          console.error("Failed to parse draft", e);
+    if (!isEditMode && !isLoading && !hasCheckedDraft.current) {
+    const savedDraft = localStorage.getItem('herald_sphere_draft');
+    if (savedDraft) {
+      try {
+        const parsed = JSON.parse(savedDraft);
+        // Only show modal if there is actual content to restore
+        if (parsed.dTitle || parsed.dContent) {
+          setTempDraft(parsed);
+          setShowDraftModal(true);
         }
+      } catch (e) {
+        console.error("Failed to parse draft", e);
       }
     }
+    hasCheckedDraft.current = true; // Mark as checked so it doesn't run again
+  }
   }, [isEditMode, isLoading]);
 
   // --- 2. AUTO-SAVE LOGIC (Whenever content changes) ---
@@ -176,6 +172,20 @@ useEffect(() => {
     }
   }, [id, isEditMode, navigate, user, isAuthenticated, isLoading]);
 
+  const handleRestoreDraft = (shouldRestore) => {
+  if (shouldRestore && tempDraft) {
+    setTitle(tempDraft.dTitle || '');
+    setContent(tempDraft.dContent || '');
+    setCategory(tempDraft.dCategory || '');
+    setCustomCategory(tempDraft.dCustom || '');
+  } else {
+    // If they choose 'No', clear the draft so they aren't asked again
+    localStorage.removeItem('herald_sphere_draft');
+  }
+  setShowDraftModal(false);
+  setTempDraft(null);
+};
+
 
   // --- ReactQuill Modules and Image Handler ---
   const modules = React.useMemo(() => ({
@@ -206,9 +216,10 @@ useEffect(() => {
           input.onchange = async () => {
             const file = input.files[0];
             if (file) {
+               console.log(`Original size: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
               setError(null);
               // setLoading(true);
-
+             
               // COMPRESSION LOGIC
             const options = {
               maxSizeMB: 1,          // Max 1MB
@@ -226,12 +237,13 @@ useEffect(() => {
               
               try {
             const compressedFile = await imageCompression(file, options);
+            console.log(`Compressed size: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
             const formData = new FormData();
             formData.append('image', compressedFile);
 
             const response = await api.post('/api/upload-image', formData, {
               headers: { 'Content-Type': 'multipart/form-data' },
-              timeout: 60000 // 1 minute
+              timeout: 90000 // 1 minute
             });
 
             const imageUrl = response.data.imageUrl;
@@ -291,22 +303,32 @@ useEffect(() => {
     }
 
     let finalMainImageUrl = mainImageUrl;
-
     if (mainImageFile) {
+    try {
+      const options = {
+        maxSizeMB: 2, // Aim for 2MB for the high-quality featured image
+        maxWidthOrHeight: 1920,
+        useWebWorker: true
+      };
+      
+      const compressedFeaturedFile = await imageCompression(mainImageFile, options);
+      
       const formData = new FormData();
-      formData.append('image', mainImageFile);
-      try {
-        const response = await api.post('/api/upload-image', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          timeout: 120000,
-          withCredentials: true,
-        });
-        finalMainImageUrl = response.data.imageUrl;
-      } catch (uploadError) {
-        setError('Featured image upload failed.');
-        setLoading(false);
-        return;
-      }
+      formData.append('image', compressedFeaturedFile); // Send the compressed one!
+
+      const response = await api.post('/api/upload-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 120000,
+        withCredentials: true,
+      });
+      finalMainImageUrl = response.data.imageUrl;
+    } catch (uploadError) {
+      // --- FIX: Specific Error Message for the User ---
+      const errorMsg = uploadError.response?.data?.message || "Featured image upload failed.";
+      setError(`Upload Error: ${errorMsg}`);
+      setLoading(false);
+      return;
+    }
     }
 
     const postData = {
@@ -337,18 +359,57 @@ useEffect(() => {
   // --- Render Logic ---
   if (isLoading) return <div>Loading user authentication...</div>; // Show loading for AuthContext
   if (!isAuthenticated) return <Navigate to="/login" replace />; // Should be handled by ProtectedRoute
-  if (loading && isEditMode) return <div>Loading post for editing...</div>; // For initial data fetch for edit
-  // If not editing, and is just loading submission
-  if (loading && !isEditMode) return <div>Submitting post...</div>;
+  if (loading && isEditMode) return <div className="h-screen flex items-center justify-center bg-white"><div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+  <div>Loading post for editing...</div>;
+  </div>;   
+  
+  if (loading && !isEditMode) return <div className="h-screen flex items-center justify-center bg-white"><div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+   <div>Submitting post...</div>;
+  </div>;    
 
   const formTitle = isEditMode
     ? (user?.role === 'admin' ? 'Edit Any Post' : 'Edit Your Post')
     : (user?.role === 'admin' ? 'Create New Post (Admin)' : 'Submit New Post');
-
+  
   return (
+    
     <div className="max-w-5xl mx-auto p-6">
+
+      {showDraftModal && (
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all">
+          <div className="bg-white rounded-[2.5rem] p-10 max-w-md w-full shadow-2xl border border-slate-100 transform scale-100 animate-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mb-8 mx-auto">
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            
+            <div className="text-center">
+              <h3 className="text-2xl font-black text-slate-900 mb-3 uppercase tracking-tighter">Restore Progress?</h3>
+              <p className="text-slate-500 text-sm leading-relaxed mb-10">
+                Herald Sphere found an draft in your local storage. Would you like to resume your writing?
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={() => handleRestoreDraft(true)}
+                className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95"
+              >
+                Yes, Restore Draft
+              </button>
+              <button 
+                onClick={() => handleRestoreDraft(false)}
+                className="w-full bg-slate-50 text-slate-400 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95"
+              >
+                No, Start Fresh
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h2 className='text-4xl text-slate-900 font-black mb-10 tracking-tight'>{formTitle}</h2>
-      
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Title Input */}
         <div className="form-group flex flex-col gap-2">

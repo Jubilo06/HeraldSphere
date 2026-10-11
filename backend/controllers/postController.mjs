@@ -98,7 +98,7 @@ export const getAllPosts=async (req, res) => {
      }
      const totalPosts = await Post.countDocuments(filter); // Get total count for pagination info
      const posts = await Post.find(filter)
-       .populate("author", "username firstName lastName profilePic")
+       .populate("author", "username firstName lastName profilePic bio")
        .sort({ createdAt: -1 })
        .skip(skip)
        .limit(limit);
@@ -141,7 +141,7 @@ export const getPostBySlug =async (req, res) => {
       { slug: slug },
       { $inc: { views: 1 } },
       { returnDocument: "after" }, // <--- New way
-    ).populate("author", "username firstName lastName profilePic");
+    ).populate("author", "username firstName lastName profilePic bio");
     if (!post) {
       return res.status(404).json({ message: 'Post not found.' });
     }
@@ -208,7 +208,7 @@ export const createPost=async (req, res) => {
 export const getPostByUser=async (req, res) => {
     try {
         const myPosts = await Post.find({ author: req.user._id })
-          .populate("author", "username firstName lastName profilePic")
+          .populate("author", "username firstName lastName profilePic bio")
           .sort({ createdAt: -1 });
         res.json(myPosts);
     } catch (error) {

@@ -26,7 +26,7 @@ function Home() {
         <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-4 text-center">
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 p-8 md:p-12 rounded-[2.5rem] max-w-3xl shadow-2xl">
             <span className="inline-block px-4 py-1.5 mb-6 text-[10px] font-black tracking-[0.3em] text-indigo-400 uppercase bg-indigo-400/10 rounded-full border border-indigo-400/20">
-              Dispatch from the Future
+              Message from the Present and the Future
             </span>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-tight mb-4 tracking-tight">
@@ -34,7 +34,7 @@ function Home() {
             </h1>
 
             <p className="text-gray-400 text-lg md:text-xl font-medium max-w-xl mx-auto leading-relaxed">
-              Where global insights meet the digital pulse. Stay ahead with the stories that define our era.
+              Where global insights meet the digital pulse. Stay ahead with the news and articles that define our era.
             </p>
 
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
@@ -60,7 +60,7 @@ function Home() {
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
-                <h2 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.4em] mb-4">The Contributor's Guild</h2>
+                <h2 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.4em] mb-4">The Contributor's Sphere</h2>
                 <h3 className="text-3xl md:text-5xl font-black text-white tracking-tighter leading-tight mb-6">
                   Have a Story the <br/> 
                   <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-400 to-purple-400">Sphere Needs to Hear?</span>
@@ -83,7 +83,7 @@ function Home() {
                   </div>
                 </div>
                 <Link to="/register" className="inline-flex items-center gap-3 px-10 py-4 bg-indigo-600 text-white font-black text-xs uppercase tracking-[0.2em] rounded-full hover:bg-indigo-500 shadow-xl shadow-indigo-600/20 transition-all group">
-                  Apply to Write
+                  Register to be become one of our contributors
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                 </Link>
               </div>
@@ -93,7 +93,7 @@ function Home() {
                  <div className="absolute -inset-4 bg-indigo-500/10 blur-3xl rounded-full"></div>
                  <div className="relative bg-white/5 border border-white/10 p-8 rounded-4xl backdrop-blur-xl">
                     <div className="flex items-center gap-4 mb-6">
-                      <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center font-black text-white">H</div>
+                      <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center font-black text-white">HS</div>
                       <div className="h-2 w-32 bg-white/10 rounded-full"></div>
                     </div>
                     <div className="space-y-4">
@@ -106,7 +106,7 @@ function Home() {
                          <div className="w-8 h-8 rounded-md bg-white/5"></div>
                          <div className="w-8 h-8 rounded-md bg-white/5"></div>
                        </div>
-                       <div className="px-4 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[8px] font-black uppercase tracking-widest">Authorized Dispatch</div>
+                       <div className="px-4 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[8px] font-black uppercase tracking-widest">Enjoy latest news and informative articles</div>
                     </div>
                  </div>
               </div>

@@ -92,7 +92,7 @@ return (
                   )}
                 </div>
                 
-                <div className="flex flex-col">
+                {/* <div className="flex flex-col">
                   <span className="text-[10px] font-black text-indigo-600 uppercase tracking-tighter leading-none">
                     {user?.role}
                   </span>
@@ -101,7 +101,43 @@ return (
                   ) : (
                     <Link to="/writer/dashboard" className="text-xs font-bold text-slate-900 hover:text-indigo-600">Writer's Desk</Link>
                   )}
-                </div>
+                </div> */}
+
+                <div className="flex flex-col group/dashboard">
+  {/* ROLE BADGE */}
+  <div className="flex items-center gap-1.5 mb-0.5">
+    <span className="text-[8px] font-black text-indigo-600 uppercase tracking-[0.15em] bg-indigo-50 px-1.5 py-0.5 rounded-md border border-indigo-100/50">
+      {user?.role}
+    </span>
+    {/* Small pulse to indicate active session */}
+    <span className="relative flex h-1.5 w-1.5">
+      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+    </span>
+  </div>
+
+  {/* DASHBOARD LINK */}
+  <Link 
+    to={isAdmin ? "/admin/dashboard" : "/writer/dashboard"} 
+    className="flex items-center gap-1 text-[11px] font-bold text-slate-900 hover:text-indigo-600 transition-all"
+  >
+    <span className="relative">
+      {isAdmin ? 'Command Center' : 'Access Workspace'}
+      {/* Animated underline on hover */}
+      <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-indigo-600 transition-all group-hover/dashboard:w-full"></span>
+    </span>
+    
+    {/* Arrow icon that moves on hover */}
+    <svg 
+      className="w-3 h-3 transform transition-transform group-hover/dashboard:translate-x-1" 
+      fill="none" 
+      stroke="currentColor" 
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+    </svg>
+  </Link>
+</div>
 
                 <button 
                   onClick={logout}

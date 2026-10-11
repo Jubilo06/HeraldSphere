@@ -1,6 +1,12 @@
 /* *{
   outline: 1px solid red !important;
 } */
+ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap');
+
+:root {
+  --font-heading: 'Inter', sans-serif;
+  --font-body: 'Merriweather', serif;
+}
  html, body, #root {
   height: 100%;
   margin: 0;
@@ -30,12 +36,28 @@
 /* Ensure the container doesn't cut off the sticky toolbar */
 .quill-editor {
   overflow: visible !important;
+   line-height: 1.8 !important; /* Perfect for reading */
+  color: #334155; /* slate-700 */
+  padding: 30px !important;
+}
+
+.ql-editor h1, .ql-editor h2, .ql-editor h3 {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 900 !important;
+  line-height: 1.2 !important; /* Tighter for headings */
+  color: #0f172a; /* slate-900 */
+  margin-top: 1.5em !important;
+}
+
+.ql-editor p {
+  margin-bottom: 1.5em !important;
 }
 
 /* Optional: Make the editor area look better */
 .ql-container.ql-snow {
   min-height: 400px;
-  font-size: 1.1rem;
+  font-family: 'Merriweather', serif !important;
+  font-size: 17px !important;
 }
 
 /* Tooltip-like effect using pure CSS (Alternative to browser title) */

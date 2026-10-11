@@ -14,12 +14,7 @@ function Footer() {
     const [status, setStatus] = useState({ type: '', msg: '' }); // 'loading', 'success', 'error'
     const [loading, setLoading] = useState(false);
     const footerRef = useRef(null);
-    // const socialLinks = [
-    // { name: 'Twitter', href: '#', icon: FaTwitter },
-    // { name: 'Instagram', href: '#', icon: FaInstagram },
-    // { name: 'LinkedIn', href: '#', icon: FaLinkedinIn },
-    // { name: 'Github', href: '#', icon: FaGithub },
-    // ];
+    
     const socialLinks = [
     { 
       name: 'Twitter', 
@@ -85,7 +80,7 @@ function Footer() {
   };
     
   return (
-    <footer ref={footerRef} className="bg-slate-950 text-slate-300 w-full overflow-hidden">
+    <footer ref={footerRef} className="bg-slate-950 text-slate-300 w-full overflow-hidden mt-12">
       <div className="max-w-7xl mx-auto px-4 pt-20 pb-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16">
           
