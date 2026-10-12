@@ -729,26 +729,7 @@ function PublicPostDetail() {
           )}
 
           {/* ARTICLE CONTENT */}
-          {/* <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed w-full">
-             <div className="ql-editor p-0!" dangerouslySetInnerHTML={{ 
-               __html: DOMPurify.sanitize(processedContent, { ADD_TAGS: ["iframe"], ADD_ATTR: ["allow", "allowfullscreen", "frameborder", "id"] }) 
-             }} />  
-          </div>  */}
-          <div className="prose prose-lg max-w-none text-slate-800 w-full
-    /* 1. Set the Body Font & Line Height */
-    font-serif leading-[1.8] 
-    
-    /* 2. Style Paragraphs */
-    prose-p:text-[17px] prose-p:leading-[1.8] prose-p:mb-6 prose-p:text-slate-700
-    
-    /* 3. Style Headings */
-    prose-headings:font-sans prose-headings:font-black prose-headings:tracking-tight prose-headings:text-slate-900
-    prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:leading-[1.3]
-    prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-3 prose-h3:leading-[1.3]
-    
-    /* 4. Style Images & Captions */
-    prose-img:rounded-3xl prose-img:shadow-xl
-">
+          <div className="prose max-w-none w-full">
    <div className="ql-editor p-0!" dangerouslySetInnerHTML={{ 
      __html: DOMPurify.sanitize(processedContent, { ADD_TAGS: ["iframe"], ADD_ATTR: ["allow", "allowfullscreen", "frameborder", "id"] }) 
    }} />  

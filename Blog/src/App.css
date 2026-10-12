@@ -5,7 +5,8 @@
 
 :root {
   --font-heading: 'Inter', sans-serif;
-  --font-body: 'Merriweather', serif;
+  --font-body: 'Inter', serif;
+  --post-text-color: rgb(42, 52, 63);
 }
  html, body, #root {
   height: 100%;
@@ -16,6 +17,15 @@
 /* Offset for the sticky navbar so headings don't hide behind it when jumping */
 [id] {
   scroll-margin-top: 120px;
+}
+
+/* Base styles for both Editor and Public View */
+.ql-editor, .prose {
+  font-family: var(--font-body) !important;
+  color: var(--post-text-color) !important;
+  font-weight: 400 !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Ensure the App container also allows flex growth */
@@ -36,9 +46,9 @@
 /* Ensure the container doesn't cut off the sticky toolbar */
 .quill-editor {
   overflow: visible !important;
-   line-height: 1.8 !important; /* Perfect for reading */
-  color: #334155; /* slate-700 */
-  padding: 30px !important;
+  color: var(--post-text-color);
+  padding: 0 !important; /* Remove the 30px padding if you want edge-to-edge *
+  
 }
 
 .ql-editor h1, .ql-editor h2, .ql-editor h3 {
@@ -49,15 +59,33 @@
   margin-top: 1.5em !important;
 }
 
-.ql-editor p {
+/* --- MOBILE (Default / Small Screens) --- */
+.ql-editor p, .prose p {
+  font-size: 16px !important;
+  line-height: 28px !important; /* Tighter for small screens */
   margin-bottom: 1.5em !important;
+}
+
+/* --- TABLET (Medium Screens - 768px and up) --- */
+@media (min-width: 768px) {
+  .ql-editor p, .prose p {
+    font-size: 17px !important;
+    line-height: 32px !important;
+  }
+}
+
+/* --- DESKTOP (Large Screens - 1024px and up) --- */
+@media (min-width: 1024px) {
+  .ql-editor p, .prose p {
+    font-size: 18px !important;
+    line-height: 36px !important; /* Your specific request */
+  }
 }
 
 /* Optional: Make the editor area look better */
 .ql-container.ql-snow {
   min-height: 400px;
-  font-family: 'Merriweather', serif !important;
-  font-size: 17px !important;
+  font-family: 'Inter', serif !important;
 }
 
 /* Tooltip-like effect using pure CSS (Alternative to browser title) */
