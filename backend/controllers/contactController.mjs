@@ -1,4 +1,5 @@
 import SibApiV3Sdk from "sib-api-v3-sdk";
+import nodemailer from "nodemailer";
 
 export const handleContactForm = async (req, res) => {
   const { name, email, subject, message } = req.body;
